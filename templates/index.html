@@ -1,11 +1,124 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    </head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Smart Marking-Kit Ops</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #1a1c1e; color: #e2e2e2; }
+        .card { background-color: #2a2d31; border: 1px solid #3f444c; }
+        .input-field { background-color: #1a1c1e; border: 1px solid #3f444c; color: white; }
+    </style>
+</head>
 <body class="p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-8 flex justify-between items-end">
+            <div>
+                <h1 class="text-2xl font-bold text-blue-400">Smart Marking-Kit Ops</h1>
+                <p class="text-gray-400 text-sm">관리 시스템 v1.0</p>
+            </div>
+            <div id="connectionStatus" class="text-xs text-green-500 font-mono">● SYSTEM LIVE</div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="card p-6 rounded-xl shadow-lg">
+                <h3 class="text-gray-400 text-xs mb-1 uppercase font-semibold">보유원단 총계</h3>
+                <p class="text-3xl font-bold" id="totalRaw">0</p>
+            </div>
+            <div class="card p-6 rounded-xl shadow-lg border-l-4 border-green-500">
+                <h3 class="text-gray-400 text-xs mb-1 uppercase font-semibold">완성품 총계</h3>
+                <p class="text-3xl font-bold text-green-400" id="totalProduct">0</p>
+            </div>
+            <div class="card p-6 rounded-xl shadow-lg border-l-4 border-red-500">
+                <h3 class="text-gray-400 text-xs mb-1 uppercase font-semibold">불량 총계</h3>
+                <p class="text-3xl font-bold text-red-400" id="totalBad">0</p>
+            </div>
+        </div>
+
+        <section class="card p-6 rounded-xl mb-8 shadow-2xl">
+            <h2 class="text-lg font-bold mb-4 flex items-center">
+                <span class="mr-2">📥</span> 신규 원단 입고 입력
+            </h2>
+            <form id="inboundForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">구단 선택</label>
+                    <select id="teamName" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500">
+                        <option value="LG">LG 트윈스</option>
+                        <option value="한화">한화 이글스</option>
+                        <option value="삼성">삼성 라이온즈</option>
+                        <option value="기타">기타/추가</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">입고 수량</label>
+                    <input type="number" id="quantity" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500" placeholder="0">
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-all active:scale-95">
+                        데이터 전송
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <section>
+            <h2 class="text-lg font-bold mb-4">실시간 재고 현황</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left card rounded-xl">
+                    <thead>
+                        <tr class="border-b border-gray-700">
+                            <th class="p-4 text-sm font-semibold text-gray-400">구단명</th>
+                            <th class="p-4 text-sm font-semibold text-gray-400">보유원단</th>
+                            <th class="p-4 text-sm font-semibold text-gray-400 text-right">상태</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTable">
+                        <tr class="border-b border-gray-800">
+                            <td class="p-4 text-sm text-gray-300">데이터 대기 중...</td>
+                            <td class="p-4 text-sm text-gray-300">0</td>
+                            <td class="p-4 text-sm text-right text-green-500">정상</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
     <script>
-        const API_URL = "/api/inbound"; // 이 줄만 정확히 있으면 됩니다.
-        // ... 나머지 스크립트 코드들 ...
+        const API_URL = "/api/inbound";
+
+        document.getElementById('inboundForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const team = document.getElementById('teamName').value;
+            const qty = document.getElementById('quantity').value;
+
+            if(!qty) return alert('수량을 입력하세요.');
+
+            const btn = e.target.querySelector('button');
+            btn.disabled = true;
+            btn.innerText = "전송 중...";
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: '입고',
+                        team: team,
+                        amount: parseInt(qty)
+                    })
+                });
+                const result = await res.json();
+                alert(result.message || '입고 완료!');
+                e.target.reset();
+            } catch (err) {
+                alert('전송 실패: Render 서버 연결을 확인하세요.');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "데이터 전송";
+            }
+        });
     </script>
 </body>
 </html>
