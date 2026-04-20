@@ -33,3 +33,4 @@ if __name__ == '__main__':
     # host를 '0.0.0.0'으로 설정해야 외부 접속이 허용됩니다.
     app.run(host='127.0.0.1', port=port)
 
+
