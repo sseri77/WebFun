@@ -29,7 +29,7 @@ def inbound_data():
 if __name__ == '__main__':
     # Render는 'PORT'라는 환경 변수를 사용하므로 이를 반영해야 합니다.
     import os
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 10000))
     # host를 '0.0.0.0'으로 설정해야 외부 접속이 허용됩니다.
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='127.0.0.1', port=port)
 
