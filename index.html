@@ -1,0 +1,15 @@
+// 기존 구글 URL 대신 Render 서버의 API 경로를 넣습니다.
+const API_URL = "/api/inbound"; 
+
+// ... 나머지 코드는 동일 ...
+try {
+    const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            action: '입고',
+            team: team,
+            amount: parseInt(qty)
+        })
+    });
+    // ... 이하 동일
