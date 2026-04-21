@@ -9,6 +9,8 @@
         body { background-color: #1a1c1e; color: #e2e2e2; }
         .card { background-color: #2a2d31; border: 1px solid #3f444c; }
         .input-field { background-color: #1a1c1e; border: 1px solid #3f444c; color: white; }
+        /* 입력창이 나타날 때 부드러운 효과 */
+        .hidden { display: none; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -16,7 +18,7 @@
         <header class="mb-8 flex justify-between items-end">
             <div>
                 <h1 class="text-2xl font-bold text-blue-400">Smart Marking-Kit Ops</h1>
-                <p class="text-gray-400 text-sm">관리 시스템 v1.0</p>
+                <p class="text-gray-400 text-sm">관리 시스템 v1.1 (구단 가변형)</p>
             </div>
             <div id="connectionStatus" class="text-xs text-green-500 font-mono">● SYSTEM LIVE</div>
         </header>
@@ -38,24 +40,29 @@
 
         <section class="card p-6 rounded-xl mb-8 shadow-2xl">
             <h2 class="text-lg font-bold mb-4 flex items-center">
-                <span class="mr-2">📥</span> 신규 원단 입고 입력
+                <span class="mr-2">📥</span> 데이터 입력
             </h2>
-            <form id="inboundForm" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">구단 선택</label>
-                    <select id="teamName" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500">
-                        <option value="LG">LG 트윈스</option>
-                        <option value="한화">한화 이글스</option>
-                        <option value="삼성">삼성 라이온즈</option>
-                        <option value="기타">기타/추가</option>
-                    </select>
+            <form id="inboundForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">구단 선택</label>
+                        <select id="teamNameSelect" onchange="toggleDirectInput(this)" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500">
+                            <option value="LG">LG 트윈스</option>
+                            <option value="한화">한화 이글스</option>
+                            <option value="삼성">삼성 라이온즈</option>
+                            <option value="롯데">롯데 자이언츠</option>
+                            <option value="direct">➕ 직접 입력(신규 구단)</option>
+                        </select>
+                        <input type="text" id="directTeamInput" class="input-field w-full p-3 mt-2 rounded-lg hidden" placeholder="새로운 구단명을 입력하세요">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">수량</label>
+                        <input type="number" id="quantity" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500" placeholder="0">
+                    </div>
                 </div>
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">입고 수량</label>
-                    <input type="number" id="quantity" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500" placeholder="0">
-                </div>
-                <div class="flex items-end">
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-all active:scale-95">
+                
+                <div class="flex gap-2">
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-all active:scale-95">
                         데이터 전송
                     </button>
                 </div>
@@ -63,21 +70,18 @@
         </section>
 
         <section>
-            <h2 class="text-lg font-bold mb-4">실시간 재고 현황</h2>
+            <h2 class="text-lg font-bold mb-4">실시간 현황</h2>
             <div class="overflow-x-auto">
                 <table class="w-full text-left card rounded-xl">
                     <thead>
                         <tr class="border-b border-gray-700">
                             <th class="p-4 text-sm font-semibold text-gray-400">구단명</th>
-                            <th class="p-4 text-sm font-semibold text-gray-400">보유원단</th>
-                            <th class="p-4 text-sm font-semibold text-gray-400 text-right">상태</th>
+                            <th class="p-4 text-sm font-semibold text-gray-400 text-right">보유원단</th>
                         </tr>
                     </thead>
                     <tbody id="inventoryTable">
                         <tr class="border-b border-gray-800">
-                            <td class="p-4 text-sm text-gray-300">데이터 대기 중...</td>
-                            <td class="p-4 text-sm text-gray-300">0</td>
-                            <td class="p-4 text-sm text-right text-green-500">정상</td>
+                            <td class="p-4 text-sm text-gray-500 italic" colspan="2">데이터를 입력하면 여기에 나타납니다.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -88,11 +92,30 @@
     <script>
         const API_URL = "/api/inbound";
 
+        // [기능] 구단 선택 박스 제어
+        function toggleDirectInput(select) {
+            const directInput = document.getElementById('directTeamInput');
+            if (select.value === 'direct') {
+                directInput.classList.remove('hidden');
+                directInput.focus();
+            } else {
+                directInput.classList.add('hidden');
+                directInput.value = ""; // 초기화
+            }
+        }
+
+        // [기능] 폼 전송 이벤트
         document.getElementById('inboundForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const team = document.getElementById('teamName').value;
+            
+            const selectVal = document.getElementById('teamNameSelect').value;
+            const directVal = document.getElementById('directTeamInput').value;
             const qty = document.getElementById('quantity').value;
 
+            // 최종 구단명 결정 (직접 입력 여부 확인)
+            const finalTeamName = (selectVal === 'direct') ? directVal : selectVal;
+
+            if(!finalTeamName) return alert('구단명을 입력하거나 선택하세요.');
             if(!qty) return alert('수량을 입력하세요.');
 
             const btn = e.target.querySelector('button');
@@ -105,15 +128,19 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         action: '입고',
-                        team: team,
+                        team: finalTeamName,
                         amount: parseInt(qty)
                     })
                 });
                 const result = await res.json();
-                alert(result.message || '입고 완료!');
+                alert(result.message || '데이터가 성공적으로 전송되었습니다!');
+                
+                // 전송 성공 시 폼 초기화
                 e.target.reset();
+                document.getElementById('directTeamInput').classList.add('hidden');
+                
             } catch (err) {
-                alert('전송 실패: Render 서버 연결을 확인하세요.');
+                alert('전송 실패: Render 서버 상태를 확인해 주세요.');
             } finally {
                 btn.disabled = false;
                 btn.innerText = "데이터 전송";
