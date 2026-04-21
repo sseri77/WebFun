@@ -5,7 +5,7 @@ from flask import Flask, request, jsonify, render_template
 app = Flask(__name__)
 
 # [설정] 기획자님이 제공해주신 구글 Apps Script 웹앱 URL입니다.
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxCutTgjSvKw1aeZbff1a6Z6ic6-SRwX_QXukJWywBJk_nzfqedFkONjPWfKG_vAdBgyQ/exec"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwU0U3QVRjGd1y6m2OLkVqRXXOtqF-2u-SlMe9DKJC-VZ3EQBrKrmccdu2OJoxbJV-Ryg/exec"
 
 @app.route('/')
 def home():
