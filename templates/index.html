@@ -17,7 +17,7 @@
         <header class="mb-8 flex justify-between items-end">
             <div>
                 <h1 class="text-2xl font-bold text-blue-400">Smart Marking-Kit Ops</h1>
-                <p class="text-gray-400 text-sm">재고 관리 시스템 v1.4</p>
+                <p class="text-gray-400 text-sm">재고 관리 시스템 v1.5</p>
             </div>
             <div id="syncStatus" class="text-xs text-green-500 font-mono italic">● DATA SYNCED</div>
         </header>
@@ -57,12 +57,12 @@
                         <input type="number" id="quantity" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500" placeholder="0">
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">선수 이름</label>
-                        <input type="text" id="playerName" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500" placeholder="이름 입력">
+                        <label class="block text-xs text-gray-400 mb-1">배번 (번호)</label>
+                        <input type="number" id="playerNumber" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500" placeholder="00">
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">배번</label>
-                        <input type="number" id="playerNumber" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500" placeholder="00">
+                        <label class="block text-xs text-gray-400 mb-1">선수 이름</label>
+                        <input type="text" id="playerName" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500" placeholder="이름 입력">
                     </div>
                 </div>
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-all active:scale-95">데이터 기록</button>
@@ -78,7 +78,7 @@
                 <table class="w-full text-left card rounded-xl">
                     <thead>
                         <tr class="border-b border-gray-700">
-                            <th class="p-4 text-sm font-semibold text-gray-400">구단 / 선수 (번호)</th>
+                            <th class="p-4 text-sm font-semibold text-gray-400">구단 / [번호] 선수명</th>
                             <th class="p-4 text-sm font-semibold text-gray-400 text-right">수량</th>
                         </tr>
                     </thead>
@@ -93,7 +93,6 @@
     <script>
         const API_URL = "/api/inbound";
 
-        // 데이터 불러오기 함수
         async function fetchInventory() {
             try {
                 const res = await fetch(API_URL);
@@ -104,7 +103,8 @@
 
                 data.forEach(item => {
                     const amount = parseInt(item.amount) || 0;
-                    const key = `${item.team} | ${item.playerName || '선수미정'}(${item.playerNumber || '0'})`;
+                    // [번호] 선수명 순서로 표시 형식 변경
+                    const key = `${item.team} | [${item.playerNumber || '0'}] ${item.playerName || '선수미정'}`;
                     summary[key] = (summary[key] || 0) + amount;
                     grandTotal += amount;
                 });
@@ -116,7 +116,7 @@
                 
                 Object.keys(summary).sort().forEach(key => {
                     tableBody.innerHTML += `
-                        <tr class="border-b border-gray-800">
+                        <tr class="border-b border-gray-800 hover:bg-gray-800/30">
                             <td class="p-4 text-sm">${key}</td>
                             <td class="p-4 text-sm text-right font-mono text-blue-300">${summary[key].toLocaleString()}</td>
                         </tr>`;
@@ -151,8 +151,8 @@
                         action: '입고',
                         team: finalTeamName,
                         amount: parseInt(qty),
-                        playerName: document.getElementById('playerName').value,
-                        playerNumber: document.getElementById('playerNumber').value
+                        playerNumber: document.getElementById('playerNumber').value, // 순서 변경
+                        playerName: document.getElementById('playerName').value
                     })
                 });
                 alert('기록 성공!');
