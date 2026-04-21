@@ -17,9 +17,9 @@
         <header class="mb-8 flex justify-between items-end">
             <div>
                 <h1 class="text-2xl font-bold text-blue-400">Smart Marking-Kit Ops</h1>
-                <p class="text-gray-400 text-sm">관리 시스템 v1.2 (실시간 동기화)</p>
+                <p class="text-gray-400 text-sm">관리 시스템 v1.3 (선수별 관리 모드)</p>
             </div>
-            <div id="connectionStatus" class="text-xs text-green-500 font-mono italic">● DATA SYNCED</div>
+            <div id="connectionStatus" class="text-xs text-green-500 font-mono italic">● SYSTEM READY</div>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -39,7 +39,7 @@
 
         <section class="card p-6 rounded-xl mb-8 shadow-2xl">
             <h2 class="text-lg font-bold mb-4 flex items-center">
-                <span class="mr-2">📥</span> 데이터 입력
+                <span class="mr-2">📥</span> 입고 데이터 입력
             </h2>
             <form id="inboundForm" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -50,36 +50,45 @@
                             <option value="한화">한화 이글스</option>
                             <option value="삼성">삼성 라이온즈</option>
                             <option value="롯데">롯데 자이언츠</option>
-                            <option value="direct">➕ 직접 입력(신규 구단)</option>
+                            <option value="direct">➕ 직접 입력</option>
                         </select>
-                        <input type="text" id="directTeamInput" class="input-field w-full p-3 mt-2 rounded-lg hidden" placeholder="새로운 구단명을 입력하세요">
+                        <input type="text" id="directTeamInput" class="input-field w-full p-3 mt-2 rounded-lg hidden" placeholder="신규 구단명 입력">
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">수량</label>
+                        <label class="block text-xs text-gray-400 mb-1">입고 수량</label>
                         <input type="number" id="quantity" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500" placeholder="0">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">선수 이름</label>
+                        <input type="text" id="playerName" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500" placeholder="예: 홍길동">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">배번 (번호)</label>
+                        <input type="number" id="playerNumber" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500" placeholder="00">
                     </div>
                 </div>
                 <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-all active:scale-95">
-                    데이터 전송
+                    데이터 전송 및 기록
                 </button>
             </form>
         </section>
 
         <section>
             <h2 class="text-lg font-bold mb-4 flex justify-between items-center">
-                <span>실시간 현황</span>
+                <span>실시간 상세 현황</span>
                 <button onclick="fetchInventory()" class="text-xs text-blue-400 hover:underline">🔄 새로고침</button>
             </h2>
             <div class="overflow-x-auto">
                 <table class="w-full text-left card rounded-xl">
                     <thead>
                         <tr class="border-b border-gray-700">
-                            <th class="p-4 text-sm font-semibold text-gray-400">구단명</th>
-                            <th class="p-4 text-sm font-semibold text-gray-400 text-right">보유원단</th>
+                            <th class="p-4 text-sm font-semibold text-gray-400">구단/선수 정보</th>
+                            <th class="p-4 text-sm font-semibold text-gray-400 text-right">보유수량</th>
                         </tr>
                     </thead>
                     <tbody id="inventoryTable">
-                        </tbody>
+                        <tr><td colspan="2" class="p-4 text-center text-gray-500 text-sm">데이터를 불러오는 중...</td></tr>
+                    </tbody>
                 </table>
             </div>
         </section>
@@ -88,43 +97,45 @@
     <script>
         const API_URL = "/api/inbound";
 
-        // 1. [기능] 구단별 데이터 불러오기 (Read)
+        // [조회] 시트 데이터 가져오기 및 합산
         async function fetchInventory() {
             try {
-                const res = await fetch(API_URL, { method: 'GET' }); // 서버에 데이터 요청
+                const res = await fetch(API_URL, { method: 'GET' });
                 const data = await res.json();
                 
                 const summary = {};
                 let grandTotal = 0;
 
-                // 데이터 가공: 구단별로 합산
                 data.forEach(item => {
                     const amount = parseInt(item.amount) || 0;
-                    summary[item.team] = (summary[item.team] || 0) + amount;
+                    // '구단 | 선수(배번)' 형식으로 키 생성
+                    const key = `${item.team} | ${item.playerName || '미지정'}(${item.playerNumber || '0'})`;
+                    summary[key] = (summary[key] || 0) + amount;
                     grandTotal += amount;
                 });
 
-                // 상단 카드 업데이트
                 document.getElementById('totalRaw').innerText = grandTotal.toLocaleString();
                 
-                // 테이블 업데이트
                 const tableBody = document.getElementById('inventoryTable');
                 tableBody.innerHTML = '';
                 
-                Object.keys(summary).forEach(team => {
+                Object.keys(summary).sort().forEach(info => {
                     const row = `<tr class="border-b border-gray-800 hover:bg-gray-800/50">
-                        <td class="p-4 text-sm">${team}</td>
-                        <td class="p-4 text-sm text-right font-mono">${summary[team].toLocaleString()}</td>
+                        <td class="p-4 text-sm font-medium">${info}</td>
+                        <td class="p-4 text-sm text-right font-mono text-blue-300">${summary[info].toLocaleString()}</td>
                     </tr>`;
                     tableBody.innerHTML += row;
                 });
+
+                if(Object.keys(summary).length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-gray-600 italic">기록된 데이터가 없습니다.</td></tr>';
+                }
 
             } catch (err) {
                 console.error("데이터 로드 실패:", err);
             }
         }
 
-        // 2. [기능] 구단 선택 제어
         function toggleDirectInput(select) {
             const directInput = document.getElementById('directTeamInput');
             if (select.value === 'direct') {
@@ -136,39 +147,47 @@
             }
         }
 
-        // 3. [기능] 데이터 전송 (Create)
+        // [전송] 폼 데이터 전송
         document.getElementById('inboundForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const selectVal = document.getElementById('teamNameSelect').value;
             const directVal = document.getElementById('directTeamInput').value;
             const qty = document.getElementById('quantity').value;
+            const pName = document.getElementById('playerName').value;
+            const pNum = document.getElementById('playerNumber').value;
+
             const finalTeamName = (selectVal === 'direct') ? directVal : selectVal;
 
-            if(!finalTeamName || !qty) return alert('입력 내용을 확인해 주세요.');
+            if(!finalTeamName || !qty) return alert('구단과 수량은 필수입니다.');
 
             const btn = e.target.querySelector('button');
             btn.disabled = true;
-            btn.innerText = "전송 중...";
+            btn.innerText = "기록 중...";
 
             try {
                 const res = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: '입고', team: finalTeamName, amount: parseInt(qty) })
+                    body: JSON.stringify({ 
+                        action: '입고', 
+                        team: finalTeamName, 
+                        amount: parseInt(qty),
+                        playerName: pName,
+                        playerNumber: pNum
+                    })
                 });
-                alert('기록 완료!');
+                alert('엑셀에 기록되었습니다!');
                 e.target.reset();
                 document.getElementById('directTeamInput').classList.add('hidden');
-                fetchInventory(); // 전송 후 즉시 목록 갱신
+                fetchInventory(); // 목록 즉시 갱신
             } catch (err) {
                 alert('전송 실패');
             } finally {
                 btn.disabled = false;
-                btn.innerText = "데이터 전송";
+                btn.innerText = "데이터 전송 및 기록";
             }
         });
 
-        // 페이지 접속 시 자동으로 데이터 불러오기
         window.onload = fetchInventory;
     </script>
 </body>
