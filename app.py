@@ -1,36 +1,40 @@
-from flask import Flask, request, jsonify, render_template
+import os
 import requests
-import json
+from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
 
-# 구글 GAS 배포 URL (방금 발급받은 배포 ID 포함된 주소)
-GAS_URL = "https://script.google.com/macros/s/YOUR_GAS_ID/exec"
+# [설정] 기획자님이 제공해주신 구글 Apps Script 웹앱 URL입니다.
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxMAoNaOLpT9DBhoJ-kEXj08XDdu843fA6817YatNnSs92vJDdTqRYWThggFpham3S5BQ/exec"
 
 @app.route('/')
-def index():
-    # 제가 드린 HTML 파일을 templates 폴더에 넣고 여기서 서빙합니다.
+def home():
+    # templates 폴더 안의 index.html 파일을 사용자에게 보여줍니다.
     return render_template('index.html')
 
 @app.route('/api/inbound', methods=['POST'])
-def inbound_data():
+def inbound():
     try:
-        # 1. 프론트엔드(HTML)에서 보낸 데이터 수신
-        client_data = request.json
+        # 1. UI(index.html)에서 보낸 데이터를 받습니다.
+        data = request.json
+        print(f"수신 데이터: {data}") # 로그 확인용
         
-        # 2. 구글 시트로 중계 전송 (Python의 requests 라이브러리 사용)
-        # 여기서 'follow_redirects=True' 처리가 중요합니다.
-        response = requests.post(GAS_URL, data=json.dumps(client_data))
+        # 2. 받은 데이터를 구글 Apps Script URL로 배달합니다.
+        # 인증 키 없이 웹앱 URL을 통해 통신하는 핵심 로직입니다.
+        response = requests.post(APPS_SCRIPT_URL, json=data)
         
-        return jsonify({"status": "success", "message": "데이터가 구글 시트로 전달되었습니다."}), 200
+        # 3. 구글 시트의 처리 결과(성공/실패)를 다시 UI로 전달합니다.
+        return jsonify(response.json())
+        
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        print(f"에러 발생: {str(e)}")
+        return jsonify({
+            "status": "error", 
+            "message": "서버 내부 통신 에러가 발생했습니다."
+        }), 500
 
 if __name__ == '__main__':
-    # Render는 'PORT'라는 환경 변수를 사용하므로 이를 반영해야 합니다.
-    import os
+    # Render 환경의 포트 설정을 따르며, 기본값은 10000입니다.
     port = int(os.environ.get("PORT", 10000))
-    # host를 '0.0.0.0'으로 설정해야 외부 접속이 허용됩니다.
+    # 외부 접속 허용을 위해 host를 0.0.0.0으로 설정합니다.
     app.run(host='127.0.0.1', port=port)
-
-
