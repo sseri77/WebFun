@@ -21,8 +21,9 @@ def inbound():
         
         # 2. 받은 데이터를 구글 Apps Script URL로 배달합니다.
         # 인증 키 없이 웹앱 URL을 통해 통신하는 핵심 로직입니다.
-        response = requests.post(APPS_SCRIPT_URL, json=data)
-        
+        # app.py의 중간 부분을 이렇게 바꿔보세요
+        response = requests.post(APPS_SCRIPT_URL, json=data, allow_redirects=True)
+
         # 3. 구글 시트의 처리 결과(성공/실패)를 다시 UI로 전달합니다.
         return jsonify(response.json())
         
