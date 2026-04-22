@@ -134,20 +134,31 @@
             if(mode !== '입고') updateSelector();
         }
 
-        // 구단 시트에서 불러온 데이터로 선택 박스 채우기
+        // 구단 시트에서 불러온 데이터(B열+C열 조합)로 선택 박스 채우기
         function renderTeamSelect() {
             const select = document.getElementById('teamNameSelect');
+            const currentVal = select.value; // 현재 선택된 값 유지용
             select.innerHTML = '';
+            
+            // 기본 안내 옵션
+            const placeholderOpt = document.createElement('option');
+            placeholderOpt.value = "";
+            placeholderOpt.innerText = "-- 구단/콜라보 선택 --";
+            select.appendChild(placeholderOpt);
+    
             masterTeams.forEach(t => {
                 const opt = document.createElement('option');
-                opt.value = t.name;
+                opt.value = t.name; // Apps Script에서 합쳐진 "LG 숀" 형태
                 opt.innerText = t.name;
                 select.appendChild(opt);
             });
+    
             const directOpt = document.createElement('option');
             directOpt.value = 'direct';
-            directOpt.innerText = '➕ 직접 입력';
+            directOpt.innerText = '➕ 직접 입력(신규)';
             select.appendChild(directOpt);
+            
+            if(currentVal) select.value = currentVal;
         }
 
         function toggleDirect(sel) {
