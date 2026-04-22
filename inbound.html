@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>입고 관리 - Inbound</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #1a1c1e; color: #e2e2e2; }
+        .card { background-color: #2a2d31; border: 1px solid #3f444c; border-radius: 12px; }
+        .input-field { background-color: #1a1c1e; border: 1px solid #4b5563; color: white; border-radius: 8px; padding: 10px; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+        <nav class="mb-6 flex justify-between items-center">
+            <a href="index.html" class="text-gray-400 hover:text-white text-sm">← 대시보드로 돌아가기</a>
+            <h1 class="text-xl font-bold text-blue-500">📥 입고 관리</h1>
+        </nav>
+
+        <section class="card p-6 mb-8 border-l-8 border-blue-500">
+            <form id="inboundForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input type="hidden" id="editIdx">
+                <input type="text" id="team" class="input-field" placeholder="구단명" required>
+                <input type="text" id="collab" class="input-field" placeholder="콜라보명">
+                <input type="text" id="pNum" class="input-field" placeholder="배번">
+                <input type="text" id="pName" class="input-field" placeholder="선수이름">
+                <input type="number" id="qty" class="input-field font-bold text-blue-400" placeholder="수량" required>
+                <button type="submit" id="submitBtn" class="md:col-span-3 bg-blue-600 py-3 rounded-xl font-bold">입고 데이터 저장</button>
+            </form>
+        </section>
+
+        <section class="card overflow-hidden">
+            <div class="p-4 bg-[#32363c] font-bold text-xs uppercase tracking-widest">입고 잔량 리스트 (미재단)</div>
+            <table class="w-full text-left text-xs">
+                <thead>
+                    <tr class="bg-[#1a1c1e] text-gray-500 border-b border-gray-800">
+                        <th class="p-4">선수 정보</th>
+                        <th class="p-4 text-right">잔여 수량</th>
+                        <th class="p-4 text-center">동작</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTable" class="divide-y divide-gray-800"></tbody>
+            </table>
+        </section>
+    </div>
+
+    <script>
+        const API_URL = "여기에_GAS_배포_URL";
+        let db = { inbound:[], process:[] };
+
+        async function init() {
+            const res = await fetch(API_URL);
+            const data = await res.json();
+            db.inbound = data.inbound;
+            db.process = data.process;
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('dataTable');
+            const summary = {};
+            db.inbound.forEach(i => {
+                const k = `${i.team}|${i.collab}|${i.num}|${i.name}`;
+                if(!summary[k]) summary[k] = { in:0, proc:0, idx: i.idx };
+                summary[k].in += Number(i.qty);
+            });
+            db.process.forEach(i => {
+                const k = `${i.team}|${i.collab}|${i.num}|${i.name}`;
+                if(summary[k]) summary[k].proc += Number(i.qty);
+            });
+
+            tbody.innerHTML = '';
+            for(const key in summary) {
+                const s = summary[key];
+                const rem = s.in - s.proc;
+                if(rem <= 0) continue;
+                const [t, c, n, nm] = key.split('|');
+                tbody.innerHTML += `
+                    <tr class="hover:bg-[#363b42] cursor-pointer" onclick="fillForm('${t}','${c}','${n}','${nm}',${rem},'${s.idx}')">
+                        <td class="p-4"><b>${t}</b> ${c}<br><span class="text-gray-500">[${n}] ${nm}</span></td>
+                        <td class="p-4 text-right font-bold text-blue-400">${rem}</td>
+                        <td class="p-4 text-center"><button onclick="event.stopPropagation(); deleteRow('${s.idx}')" class="text-red-500">삭제</button></td>
+                    </tr>`;
+            }
+        }
+
+        function fillForm(t,c,n,nm,q,idx) {
+            document.getElementById('editIdx').value = idx;
+            document.getElementById('team').value = t;
+            document.getElementById('collab').value = c;
+            document.getElementById('pNum').value = n;
+            document.getElementById('pName').value = nm;
+            document.getElementById('qty').value = q;
+            document.getElementById('submitBtn').innerText = "수정하기";
+            document.getElementById('submitBtn').className = "md:col-span-3 bg-yellow-600 py-3 rounded-xl font-bold";
+        }
+
+        document.getElementById('inboundForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const idx = document.getElementById('editIdx').value;
+            const payload = {
+                method: idx ? 'UPDATE' : 'INSERT',
+                action: '입고',
+                idx: idx,
+                team: document.getElementById('team').value,
+                collab: document.getElementById('collab').value,
+                num: document.getElementById('pNum').value,
+                name: document.getElementById('pName').value,
+                qty: document.getElementById('qty').value
+            };
+            btn.disabled = true; btn.innerText = "저장 중...";
+            await fetch(API_URL, { method:'POST', mode:'no-cors', body:JSON.stringify(payload) });
+            location.reload();
+        };
+
+        function deleteRow(idx) {
+            if(confirm("삭제하시겠습니까?")) {
+                fetch(API_URL, { method:'POST', mode:'no-cors', body:JSON.stringify({method:'DELETE', action:'입고', idx:idx}) })
+                .then(() => location.reload());
+            }
+        }
+        window.onload = init;
+    </script>
+</body>
+</html>
