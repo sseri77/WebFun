@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Marking-Kit Pro Ops v4.5</title>
+    <title>Marking-Kit Pro Ops v4.6</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #1a1c1e; color: #e2e2e2; font-family: sans-serif; }
         .card { background-color: #2a2d31; border: 1px solid #3f444c; }
         .input-field { background-color: #1a1c1e; border: 1px solid #3f444c; color: white; }
-        .hidden { display: none; }
         .btn-toggle { background-color: #3f444c; color: #a1a1a1; transition: all 0.2s; }
         .active-in { background-color: #2563eb !important; color: white !important; border: 2px solid #60a5fa; }
         .active-process { background-color: #d97706 !important; color: white !important; border: 2px solid #fbbf24; }
@@ -21,33 +20,28 @@
         <header class="mb-8 flex justify-between items-end">
             <div>
                 <h1 class="text-2xl font-bold text-blue-400">Marking-Kit Pro Ops</h1>
-                <p class="text-gray-400 text-sm">마스터 연동 v4.5</p>
+                <p class="text-gray-400 text-sm">텍스트 보존 시스템 v4.6</p>
             </div>
             <div id="status" class="text-xs text-blue-500 font-mono italic">● SYNCING...</div>
         </header>
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div class="card p-4 rounded-xl shadow-lg border-t-4 border-blue-500 text-center">
-                <h3 class="text-gray-400 text-[10px] mb-1 font-semibold uppercase">미재단 원단</h3>
+            <div class="card p-4 rounded-xl text-center border-t-4 border-blue-500">
+                <h3 class="text-[10px] text-gray-400 uppercase">미재단 원단</h3>
                 <p class="text-2xl font-bold" id="totalRaw">0</p>
             </div>
-            <div class="card p-4 rounded-xl shadow-lg border-t-4 border-yellow-500 text-center">
-                <h3 class="text-gray-400 text-[10px] mb-1 font-semibold uppercase">가용재고</h3>
+            <div class="card p-4 rounded-xl text-center border-t-4 border-yellow-500">
+                <h3 class="text-[10px] text-gray-400 uppercase">가용재고</h3>
                 <p class="text-2xl font-bold text-yellow-400" id="totalAvailable">0</p>
             </div>
-            <div class="card p-4 rounded-xl shadow-lg border-t-4 border-green-500 text-center">
-                <h3 class="text-gray-400 text-[10px] mb-1 font-semibold uppercase">누적 출고</h3>
+            <div class="card p-4 rounded-xl text-center border-t-4 border-green-500">
+                <h3 class="text-[10px] text-gray-400 uppercase">누적 출고</h3>
                 <p class="text-2xl font-bold text-green-400" id="totalOut">0</p>
             </div>
-            <div class="card p-4 rounded-xl shadow-lg border-t-4 border-purple-500 text-center">
-                <h3 class="text-gray-400 text-[10px] mb-1 font-semibold uppercase">총 자산</h3>
+            <div class="card p-4 rounded-xl text-center border-t-4 border-purple-500">
+                <h3 class="text-[10px] text-gray-400 uppercase">총 자산</h3>
                 <p class="text-2xl font-bold text-purple-400" id="totalAsset">0</p>
             </div>
-        </div>
-
-        <div class="mb-6 relative">
-            <input type="text" id="searchInput" onkeyup="filterTable()" placeholder="구단, 선수 검색..." class="input-field w-full p-4 pl-10 rounded-xl outline-none focus:border-blue-500 text-sm">
-            <span class="absolute left-3 top-4 text-gray-500">🔍</span>
         </div>
 
         <section class="card p-6 rounded-xl mb-8 shadow-2xl">
@@ -63,16 +57,15 @@
             <form id="mainForm" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div id="selectionArea" class="md:col-span-2 hidden">
-                        <label class="block text-xs text-blue-400 mb-1 font-bold">기존 목록에서 선택</label>
-                        <select id="itemSelector" onchange="bindSelectedItem(this)" class="input-field w-full p-4 rounded-lg outline-none border-2 border-blue-900">
+                        <label class="block text-[10px] text-blue-400 mb-1 font-bold">기존 목록에서 선택</label>
+                        <select id="itemSelector" onchange="bindSelectedItem(this)" class="input-field w-full p-4 rounded-lg border-2 border-blue-900">
                             <option value="">-- 선수 선택 --</option>
                         </select>
                     </div>
-
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">구단 / 콜라보 선택</label>
-                        <select id="teamNameSelect" onchange="toggleDirect(this)" class="input-field w-full p-3 rounded-lg outline-none">
-                            <option value="">데이터 로딩 중...</option>
+                        <label class="block text-[10px] text-gray-400 mb-1">구단 / 콜라보 선택</label>
+                        <select id="teamNameSelect" onchange="toggleDirect(this)" class="input-field w-full p-3 rounded-lg">
+                            <option value="">로딩 중...</option>
                         </select>
                         <div id="directInputGroup" class="hidden space-y-2 mt-2">
                             <input type="text" id="directBaseTeam" class="input-field w-full p-3 rounded-lg" placeholder="구단명 (예: LG)">
@@ -80,35 +73,33 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">수량 <span id="maxLabel" class="text-red-400 font-bold ml-2"></span></label>
-                        <input type="number" id="quantity" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500" placeholder="0">
+                        <label class="block text-[10px] text-gray-400 mb-1">수량 <span id="maxLabel" class="text-red-400 ml-2"></span></label>
+                        <input type="number" id="quantity" class="input-field w-full p-3 rounded-lg" placeholder="0">
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">배번</label>
-                        <input type="text" id="playerNumber" class="input-field w-full p-3 rounded-lg outline-none" placeholder="예: 01번, A-1 등">
+                        <label class="block text-[10px] text-gray-400 mb-1">배번</label>
+                        <input type="text" id="playerNumber" class="input-field w-full p-3 rounded-lg" placeholder="예: 01번">
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">선수 이름</label>
-                        <input type="text" id="playerName" class="input-field w-full p-3 rounded-lg outline-none" placeholder="이름 입력">
+                        <label class="block text-[10px] text-gray-400 mb-1">선수 이름</label>
+                        <input type="text" id="playerName" class="input-field w-full p-3 rounded-lg" placeholder="이름 입력">
                     </div>
                 </div>
                 <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white font-bold py-4 rounded-lg active:scale-95 transition-all">기록하기</button>
             </form>
         </section>
 
-        <section>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left card rounded-xl">
-                    <thead class="bg-[#32363c]">
-                        <tr>
-                            <th class="p-4 text-[11px] text-gray-400 uppercase">구단 / 콜라보 / [번호] 선수</th>
-                            <th class="p-4 text-[11px] text-gray-400 text-right">미재단</th>
-                            <th class="p-4 text-[11px] text-gray-400 text-right">가용</th>
-                        </tr>
-                    </thead>
-                    <tbody id="inventoryTable"></tbody>
-                </table>
-            </div>
+        <section class="card rounded-xl overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-[#32363c]">
+                    <tr>
+                        <th class="p-4 text-[10px] text-gray-400">구단 / [배번] 선수</th>
+                        <th class="p-4 text-[10px] text-gray-400 text-right">미재단</th>
+                        <th class="p-4 text-[10px] text-gray-400 text-right">가용</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryTable" class="divide-y divide-gray-800"></tbody>
+            </table>
         </section>
     </div>
 
@@ -116,22 +107,21 @@
         const API_URL = "/api/inbound"; 
         let currentMode = "입고";
         let currentSummary = {};
-        let masterTeams = [];
 
         function setMode(mode) {
             currentMode = mode;
             document.getElementById('selectionArea').classList.toggle('hidden', mode === '입고');
-            document.getElementById('maxLabel').innerText = "";
-            const config = {
-                '입고': { class: 'active-in', text: '원단 입고 기록', color: 'bg-blue-600' },
-                '공정': { class: 'active-process', text: '재단 공정 완료', color: 'bg-yellow-600' },
-                '출고': { class: 'active-out', text: '최종 출고 처리', color: 'bg-red-600' }
+            const cfg = {
+                '입고': ['active-in', 'bg-blue-600', '원단 입고'],
+                '공정': ['active-process', 'bg-yellow-600', '재단 완료'],
+                '출고': ['active-out', 'bg-red-600', '최종 출고']
             };
-            ['modeIn', 'modeProcess', 'modeOut'].forEach(id => document.getElementById(id).classList.remove('active-in', 'active-process', 'active-out'));
-            document.getElementById(`mode${mode === '입고' ? 'In' : (mode === '공정' ? 'Process' : 'Out')}`).classList.add(config[mode].class);
+            ['modeIn', 'modeProcess', 'modeOut'].forEach(id => document.getElementById(id).className = 'btn-toggle px-4 py-2 rounded-md text-xs font-bold');
+            const target = document.getElementById(`mode${mode === '입고' ? 'In' : (mode === '공정' ? 'Process' : 'Out')}`);
+            target.classList.add(cfg[mode][0]);
             const btn = document.getElementById('submitBtn');
-            btn.innerText = config[mode].text;
-            btn.className = `w-full ${config[mode].color} text-white font-bold py-4 rounded-lg active:scale-95 transition-all`;
+            btn.className = `w-full ${cfg[mode][1]} text-white font-bold py-4 rounded-lg active:scale-95 transition-all`;
+            btn.innerText = cfg[mode][2];
             if(mode !== '입고') updateSelector();
         }
 
@@ -145,21 +135,16 @@
                 const res = await fetch(API_URL);
                 const result = await res.json();
                 
-                masterTeams = result.teams || [];
                 const select = document.getElementById('teamNameSelect');
-                select.innerHTML = '<option value="">-- 선택하세요 --</option>';
-                masterTeams.forEach(t => {
-                    const opt = document.createElement('option');
-                    opt.value = t.name; opt.innerText = t.name;
-                    select.appendChild(opt);
-                });
+                select.innerHTML = '<option value="">-- 선택 --</option>';
+                result.teams.forEach(t => select.innerHTML += `<option value="${t.name}">${t.name}</option>`);
                 select.innerHTML += '<option value="direct">➕ 직접 입력</option>';
 
                 currentSummary = {};
                 let rT = 0, aT = 0, oT = 0;
-                (result.inventory || []).forEach(item => {
+                result.inventory.forEach(item => {
                     const amt = parseInt(item.amount) || 0;
-                    const key = `${item.team} | [${item.playerNumber || '0'}] ${item.playerName || '미지정'}`;
+                    const key = `${item.team} | [${item.playerNumber}] ${item.playerName}`;
                     if (!currentSummary[key]) currentSummary[key] = { raw: 0, available: 0 };
                     if (item.action === '입고') { currentSummary[key].raw += amt; rT += amt; }
                     else if (item.action === '공정') { currentSummary[key].raw -= amt; currentSummary[key].available += amt; rT -= amt; aT += amt; }
@@ -178,20 +163,17 @@
                     tableBody.innerHTML += `<tr class="border-b border-gray-800"><td class="p-4 text-sm">${key}</td><td class="p-4 text-sm text-right text-gray-500">${row.raw}</td><td class="p-4 text-sm text-right text-blue-400 font-bold">${row.available}</td></tr>`;
                 });
                 document.getElementById('status').innerText = "● STABLE";
-            } catch (err) { document.getElementById('status').innerText = "● ERROR"; }
+            } catch (e) { document.getElementById('status').innerText = "● ERROR"; }
         }
 
         function updateSelector() {
             const selector = document.getElementById('itemSelector');
-            selector.innerHTML = '<option value="">-- 기존 목록에서 선수 선택 --</option>';
+            selector.innerHTML = '<option value="">-- 선수 선택 --</option>';
             Object.keys(currentSummary).sort().forEach(key => {
-                const [teamPart, playerPart] = key.split(' | ');
-                const num = playerPart.match(/\[(.*?)\]/)[1];
-                const name = playerPart.split('] ')[1];
-                const opt = document.createElement('option');
-                opt.value = `${teamPart}|${num}|${name}`;
-                opt.innerText = key;
-                selector.appendChild(opt);
+                const [team, player] = key.split(' | ');
+                const num = player.match(/\[(.*?)\]/)[1];
+                const name = player.split('] ')[1];
+                selector.innerHTML += `<option value="${team}|${num}|${name}">${key}</option>`;
             });
         }
 
@@ -203,13 +185,12 @@
             document.getElementById('playerName').value = name;
             const key = `${team} | [${num}] ${name}`;
             const stock = currentSummary[key] || { raw: 0, available: 0 };
-            document.getElementById('maxLabel').innerText = `(현재고: ${currentMode === '공정' ? stock.raw : stock.available}개)`;
+            document.getElementById('maxLabel').innerText = `(재고: ${currentMode === '공정' ? stock.raw : stock.available})`;
         }
 
-// 폼 전송 로직 (배번을 문자열 그대로 전송하도록 유지)
         document.getElementById('mainForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+            const btn = document.getElementById('submitBtn');
             const teamSelect = document.getElementById('teamNameSelect').value;
             let baseTeam = "", collabName = "", finalTeam = "";
             
@@ -220,56 +201,31 @@
             } else {
                 finalTeam = teamSelect;
                 const parts = teamSelect.split(' ');
-                baseTeam = parts[0];
-                collabName = parts.slice(1).join(' ');
+                baseTeam = parts[0]; collabName = parts.slice(1).join(' ');
             }
 
             const qty = parseInt(document.getElementById('quantity').value) || 0;
-            // .value를 그대로 가져와서 문자열("01번")을 보존합니다.
-            const num = document.getElementById('playerNumber').value; 
+            const num = document.getElementById('playerNumber').value;
             const name = document.getElementById('playerName').value;
 
             if (currentMode !== '입고') {
                 const key = `${finalTeam} | [${num}] ${name}`;
                 const limit = currentMode === '공정' ? (currentSummary[key]?.raw || 0) : (currentSummary[key]?.available || 0);
-                if (qty > limit) return alert(`수량 초과! 최대 ${limit}개 가능`);
+                if (qty > limit) return alert('수량 부족');
             }
-            if(!finalTeam || qty <= 0) return alert('항목과 수량을 확인하세요.');
+            if(!finalTeam || qty <= 0) return alert('정보 입력 필요');
 
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true; btn.innerText = "처리 중...";
-            
+            btn.disabled = true; btn.innerText = "전송 중...";
             try {
                 await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        action: currentMode, 
-                        team: finalTeam, 
-                        baseTeam, 
-                        collabName, 
-                        amount: qty, 
-                        playerNumber: num, // "01번" 형태로 서버에 전송됨
-                        playerName: name 
-                    })
+                    body: JSON.stringify({ action: currentMode, team: finalTeam, baseTeam, collabName, amount: qty, playerNumber: num, playerName: name })
                 });
-                alert('기록 완료!');
+                alert('완료');
                 location.reload();
-            } catch (err) { 
-                alert('오류 발생'); 
-                btn.disabled = false; 
-                btn.innerText = "기록하기";
-            }
+            } catch (err) { alert('실패'); btn.disabled = false; }
         });
-
-        function filterTable() {
-            const filter = document.getElementById('searchInput').value.toUpperCase();
-            const trs = document.getElementById('inventoryTable').getElementsByTagName('tr');
-            for (let tr of trs) {
-                const txt = tr.textContent || tr.innerText;
-                tr.style.display = txt.toUpperCase().indexOf(filter) > -1 ? "" : "none";
-            }
-        }
 
         window.onload = fetchAllData;
     </script>
