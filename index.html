@@ -44,14 +44,26 @@
             </div>
         </div>
 
-        <section class="card p-6 shadow-2xl mb-8">
-            <div class="flex gap-2 p-1 bg-[#1a1c1e] rounded-lg mb-6 w-fit border border-gray-700">
-                <button onclick="changeMode('입고')" id="btnIn" class="btn-toggle active-in px-6 py-2 text-xs">입고</button>
-                <button onclick="changeMode('공정')" id="btnProc" class="btn-toggle px-6 py-2 text-xs">재단</button>
-                <button onclick="changeMode('출고')" id="btnOut" class="btn-toggle px-6 py-2 text-xs">출고</button>
+        <section class="card p-6 shadow-2xl mb-8 border-l-8 transition-all" id="formContainer" style="border-color: #2563eb;">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex gap-2 p-1 bg-[#1a1c1e] rounded-lg w-fit border border-gray-700">
+                    <button onclick="changeMode('입고')" id="btnIn" class="btn-toggle active-in px-6 py-2 text-xs">입고</button>
+                    <button onclick="changeMode('공정')" id="btnProc" class="btn-toggle px-6 py-2 text-xs">재단</button>
+                    <button onclick="changeMode('출고')" id="btnOut" class="btn-toggle px-6 py-2 text-xs">출고</button>
+                </div>
+                
+                <div id="editIndicator" class="hidden flex items-center gap-2 bg-red-900/50 px-3 py-1 rounded-full border border-red-500">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                    </span>
+                    <span class="text-[10px] font-bold text-red-200 uppercase">Edit Mode</span>
+                </div>
             </div>
 
             <form id="mainForm" class="space-y-6">
+                <input type="hidden" id="editIdx" value="">
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="flex flex-col gap-2">
                         <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">구단명 선택</label>
@@ -80,7 +92,10 @@
                     </div>
                 </div>
 
-                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black text-white text-base shadow-lg transition-all active:scale-95">데이터 기록 저장하기</button>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black text-white text-base shadow-lg transition-all active:scale-95">데이터 기록 저장하기</button>
+                    <button type="button" onclick="resetForm()" class="w-full bg-gray-700 hover:bg-gray-600 py-4 rounded-xl font-bold text-white text-base shadow-lg transition-all active:scale-95">입력창 초기화</button>
+                </div>
             </form>
         </section>
 
@@ -92,7 +107,7 @@
                 <table class="w-full text-left text-xs">
                     <thead>
                         <tr class="bg-[#1a1c1e] text-gray-500 border-b border-gray-800 font-bold uppercase">
-                            <th class="p-4">항목 (클릭 시 폼 자동 입력)</th>
+                            <th class="p-4">항목 (클릭 시 수정 모드)</th>
                             <th class="p-4 text-right">미재단</th>
                             <th class="p-4 text-right text-yellow-500">가용</th>
                             <th class="p-4 text-center">동작</th>
@@ -105,9 +120,10 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbzs9AkviDyu8sXpVLI0BxNhDP-t3xPLlWZGxzOrU8GzryuMo9Hc1sOAj0X2yKHeV7bvbA/exec";
+        const API_URL = "여기에_당신의_GAS_배포_URL을_넣으세요";
         let db = { inbound:[], process:[], outbound:[], teams:[], collabs:[] };
         let curMode = "입고";
+        let isEditMode = false;
 
         async function init() {
             try {
@@ -121,6 +137,7 @@
         }
 
         function changeMode(m) {
+            if(isEditMode) return; // 수정 중에는 모드 변경 방지
             curMode = m;
             const btns = { '입고':'btnIn', '공정':'btnProc', '출고':'btnOut' };
             const clss = { '입고':'active-in', '공정':'active-process', '출고':'active-out' };
@@ -128,11 +145,17 @@
             document.getElementById(btns[m]).classList.add(clss[m]);
             
             const submitBtn = document.getElementById('submitBtn');
-            if(m === '공정') submitBtn.className = "w-full bg-amber-600 hover:bg-amber-500 py-4 rounded-xl font-black text-white text-base shadow-lg transition-all active:scale-95";
-            else if(m === '출고') submitBtn.className = "w-full bg-red-600 hover:bg-red-500 py-4 rounded-xl font-black text-white text-base shadow-lg transition-all active:scale-95";
-            else submitBtn.className = "w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black text-white text-base shadow-lg transition-all active:scale-95";
-
-            document.getElementById('maxQty').innerText = "";
+            const container = document.getElementById('formContainer');
+            if(m === '공정') {
+                submitBtn.className = "w-full bg-amber-600 hover:bg-amber-500 py-4 rounded-xl font-black text-white text-base shadow-lg transition-all active:scale-95";
+                container.style.borderColor = "#d97706";
+            } else if(m === '출고') {
+                submitBtn.className = "w-full bg-red-600 hover:bg-red-500 py-4 rounded-xl font-black text-white text-base shadow-lg transition-all active:scale-95";
+                container.style.borderColor = "#dc2626";
+            } else {
+                submitBtn.className = "w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black text-white text-base shadow-lg transition-all active:scale-95";
+                container.style.borderColor = "#2563eb";
+            }
             updateFormOptions();
         }
 
@@ -186,7 +209,6 @@
                     }
                 }
             }
-            
             cSel.onchange = () => {
                 if(cSel.value === 'direct') mCollab.classList.remove('hidden');
                 else mCollab.classList.add('hidden');
@@ -200,7 +222,6 @@
             
             let summary = {};
             let totalRaw = 0, totalAvailable = 0, totalOut = 0;
-
             const allData = [...db.inbound, ...db.process, ...db.outbound];
             
             allData.forEach(item => {
@@ -209,12 +230,13 @@
                 else if(item.action === '공정') { totalRaw -= qty; totalAvailable += qty; }
                 else if(item.action === '출고') { totalAvailable -= qty; totalOut += qty; }
 
-                // 배번을 문자열로 확실히 처리하기 위해 템플릿 리터럴 사용
                 const key = `${item.team} ${item.collab} | [${item.num}] ${item.name}`;
-                if(!summary[key]) summary[key] = { raw:0, available:0, team:item.team, collab:item.collab, num:String(item.num), name:item.name, idx:item.idx };
+                if(!summary[key]) summary[key] = { raw:0, available:0, team:item.team, collab:item.collab, num:String(item.num), name:item.name, idx:item.idx, lastQty: qty };
                 if(item.action === '입고') summary[key].raw += qty;
                 else if(item.action === '공정') { summary[key].raw -= qty; summary[key].available += qty; }
                 else if(item.action === '출고') summary[key].available -= qty;
+                summary[key].lastIdx = item.idx; // 가장 최근 액션의 ID 유지
+                summary[key].lastQty = qty;
             });
 
             document.getElementById('totalRaw').innerText = totalRaw.toLocaleString();
@@ -227,71 +249,69 @@
                     const s = summary[key];
                     const tr = document.createElement('tr');
                     tr.className = "row-link";
-                    // fillForm 인자 전달 시 문자열임을 명시하기 위해 따옴표 사용
-                    tr.innerHTML = `<td class="p-4" onclick="fillForm('${s.team}','${s.collab}','${s.num}','${s.name}',${s.raw},${s.available})">
+                    tr.innerHTML = `<td class="p-4" onclick="fillForm('${s.team}','${s.collab}','${s.num}','${s.name}',${s.lastQty},'${s.lastIdx}')">
                             <span class="text-blue-400 font-bold">${s.team}</span> ${s.collab} <br>
                             <span class="text-gray-400">[${s.num}] ${s.name}</span>
                         </td>
                         <td class="p-4 text-right text-gray-500 font-mono">${s.raw}</td>
                         <td class="p-4 text-right text-yellow-500 font-bold font-mono">${s.available}</td>
                         <td class="p-4 text-center">
-                            <button onclick="event.stopPropagation(); deleteRow('${s.idx}')" class="px-3 py-1 bg-red-900/30 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors">삭제</button>
+                            <button onclick="event.stopPropagation(); deleteRow('${s.lastIdx}')" class="px-3 py-1 bg-red-900/30 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors">삭제</button>
                         </td>`;
                     tbody.appendChild(tr);
                 }
             });
         }
 
-        function fillForm(t, c, n, nm, r, a) {
+        function fillForm(t, c, n, nm, qty, idx) {
+            isEditMode = true;
+            document.getElementById('editIdx').value = idx;
+            document.getElementById('editIndicator').classList.remove('hidden');
+            document.getElementById('formContainer').style.borderColor = "#ef4444";
+            document.getElementById('submitBtn').innerText = "기존 데이터 수정하기 (UPDATE)";
+
             document.getElementById('teamSelect').value = t;
             updateCollabOptions();
             document.getElementById('collabSelect').value = c;
-            document.getElementById('pNum').value = String(n); // 문자열로 변환하여 입력
+            document.getElementById('pNum').value = n;
             document.getElementById('pName').value = nm;
+            document.getElementById('qty').value = qty;
             
-            const max = curMode === '공정' ? r : a;
-            if(curMode !== '입고') {
-                document.getElementById('maxQty').innerText = `(MAX: ${max})`;
-                document.getElementById('qty').max = max;
-                document.getElementById('qty').value = max; 
-            } else {
-                document.getElementById('maxQty').innerText = "";
-                document.getElementById('qty').value = "";
-            }
             window.scrollTo({ top:0, behavior:'smooth' });
+        }
+
+        function resetForm() {
+            isEditMode = false;
+            document.getElementById('editIdx').value = "";
+            document.getElementById('mainForm').reset();
+            document.getElementById('editIndicator').classList.add('hidden');
+            document.getElementById('submitBtn').innerText = "데이터 기록 저장하기";
+            changeMode(curMode);
         }
 
         document.getElementById('mainForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
-            const tSel = document.getElementById('teamSelect').value;
-            const cSel = document.getElementById('collabSelect').value;
-            
             const payload = {
-                method: 'INSERT',
+                method: isEditMode ? 'UPDATE' : 'INSERT',
+                idx: document.getElementById('editIdx').value,
                 action: curMode,
-                team: tSel === 'direct' ? document.getElementById('manualTeam').value : tSel,
-                collab: (tSel === 'direct' || cSel === 'direct') ? document.getElementById('manualCollab').value : cSel,
-                num: String(document.getElementById('pNum').value), // 전송 시에도 문자열화
+                team: document.getElementById('teamSelect').value === 'direct' ? document.getElementById('manualTeam').value : document.getElementById('teamSelect').value,
+                collab: (document.getElementById('teamSelect').value === 'direct' || document.getElementById('collabSelect').value === 'direct') ? document.getElementById('manualCollab').value : document.getElementById('collabSelect').value,
+                num: String(document.getElementById('pNum').value),
                 name: document.getElementById('pName').value,
                 qty: document.getElementById('qty').value
             };
 
-            if(!payload.team || !payload.collab || !payload.qty) { alert("모든 항목을 입력하세요."); return; }
-
-            btn.disabled = true; btn.innerText = "데이터 서버 저장 중...";
+            btn.disabled = true; btn.innerText = "처리 중...";
             try {
                 await fetch(API_URL, { method:'POST', mode:'no-cors', body:JSON.stringify(payload) });
                 location.reload();
-            } catch (err) {
-                alert("저장 실패");
-                btn.disabled = false; btn.innerText = "데이터 기록 저장하기";
-            }
+            } catch (err) { alert("처리 실패"); btn.disabled = false; }
         });
 
         function deleteRow(idx) { 
-            if(confirm("해당 항목의 최신 기록을 삭제하시겠습니까?")) {
-                document.getElementById('status').innerText = "● DELETING...";
+            if(confirm("정말로 삭제하시겠습니까?")) {
                 fetch(API_URL,{method:'POST',mode:'no-cors',body:JSON.stringify({method:'DELETE',idx:idx})})
                 .then(()=>location.reload()); 
             }
