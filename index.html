@@ -57,7 +57,7 @@
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                     </span>
-                    <span class="text-[10px] font-bold text-red-200 uppercase">Edit Mode</span>
+                    <span class="text-[10px] font-bold text-red-200 uppercase tracking-widest">Edit Mode</span>
                 </div>
             </div>
 
@@ -92,9 +92,9 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                     <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black text-white text-base shadow-lg transition-all active:scale-95">데이터 기록 저장하기</button>
-                    <button type="button" onclick="resetForm()" class="w-full bg-gray-700 hover:bg-gray-600 py-4 rounded-xl font-bold text-white text-base shadow-lg transition-all active:scale-95">입력창 초기화</button>
+                    <button type="button" onclick="resetForm()" class="w-full bg-gray-700 hover:bg-gray-600 py-4 rounded-xl font-bold text-white text-base shadow-lg transition-all active:scale-95 text-gray-300">입력창 초기화</button>
                 </div>
             </form>
         </section>
@@ -107,7 +107,7 @@
                 <table class="w-full text-left text-xs">
                     <thead>
                         <tr class="bg-[#1a1c1e] text-gray-500 border-b border-gray-800 font-bold uppercase">
-                            <th class="p-4">항목 (클릭 시 수정 모드)</th>
+                            <th class="p-4">항목 (클릭 시 수정)</th>
                             <th class="p-4 text-right">미재단</th>
                             <th class="p-4 text-right text-yellow-500">가용</th>
                             <th class="p-4 text-center">동작</th>
@@ -120,7 +120,8 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbyRcSvXh1yCyN2rl1_QIarU0n6AN-6Kgo6kRu2299iX0-7OrFyEgD_nSW6I2shY6ABlbw/exec";
+        // GAS 웹 앱 배포 URL을 여기에 넣으세요
+        const API_URL = "https://script.google.com/macros/s/AKfycbw_yx1OthTWvLxL3EcotSZy4uI8QhzgJFrIHliDqlyZz7W1uysbk-qrXdc2uY1WYW4HIw/exec"; 
         let db = { inbound:[], process:[], outbound:[], teams:[], collabs:[] };
         let curMode = "입고";
         let isEditMode = false;
@@ -137,7 +138,7 @@
         }
 
         function changeMode(m) {
-            if(isEditMode) return; // 수정 중에는 모드 변경 방지
+            if(isEditMode) return; // 수정 모드일 때는 탭 전환 방지 (데이터 일관성)
             curMode = m;
             const btns = { '입고':'btnIn', '공정':'btnProc', '출고':'btnOut' };
             const clss = { '입고':'active-in', '공정':'active-process', '출고':'active-out' };
@@ -146,6 +147,7 @@
             
             const submitBtn = document.getElementById('submitBtn');
             const container = document.getElementById('formContainer');
+            
             if(m === '공정') {
                 submitBtn.className = "w-full bg-amber-600 hover:bg-amber-500 py-4 rounded-xl font-black text-white text-base shadow-lg transition-all active:scale-95";
                 container.style.borderColor = "#d97706";
@@ -209,10 +211,6 @@
                     }
                 }
             }
-            cSel.onchange = () => {
-                if(cSel.value === 'direct') mCollab.classList.remove('hidden');
-                else mCollab.classList.add('hidden');
-            };
         }
 
         function renderTable() {
@@ -230,12 +228,16 @@
                 else if(item.action === '공정') { totalRaw -= qty; totalAvailable += qty; }
                 else if(item.action === '출고') { totalAvailable -= qty; totalOut += qty; }
 
-                const key = `${item.team} ${item.collab} | [${item.num}] ${item.name}`;
-                if(!summary[key]) summary[key] = { raw:0, available:0, team:item.team, collab:item.collab, num:String(item.num), name:item.name, idx:item.idx, lastQty: qty };
+                const key = `${item.team}|${item.collab}|${item.num}|${item.name}`;
+                if(!summary[key]) {
+                    summary[key] = { raw:0, available:0, team:item.team, collab:item.collab, num:String(item.num), name:item.name, idx:item.idx, lastQty: qty };
+                }
+                
                 if(item.action === '입고') summary[key].raw += qty;
                 else if(item.action === '공정') { summary[key].raw -= qty; summary[key].available += qty; }
                 else if(item.action === '출고') summary[key].available -= qty;
-                summary[key].lastIdx = item.idx; // 가장 최근 액션의 ID 유지
+                
+                summary[key].lastIdx = item.idx; 
                 summary[key].lastQty = qty;
             });
 
@@ -249,11 +251,12 @@
                     const s = summary[key];
                     const tr = document.createElement('tr');
                     tr.className = "row-link";
-                    tr.innerHTML = `<td class="p-4" onclick="fillForm('${s.team}','${s.collab}','${s.num}','${s.name}',${s.lastQty},'${s.lastIdx}')">
-                            <span class="text-blue-400 font-bold">${s.team}</span> ${s.collab} <br>
-                            <span class="text-gray-400">[${s.num}] ${s.name}</span>
+                    // 💡 여기에 수정 시 필요한 모든 정보와 'idx'를 인자로 전달합니다.
+                    tr.innerHTML = `<td class="p-4" onclick="fillForm('${s.team.replace(/'/g, "\\'")}','${s.collab.replace(/'/g, "\\'")}','${s.num}','${s.name.replace(/'/g, "\\'")}','${s.lastQty}','${s.lastIdx}')">
+                            <span class="text-blue-400 font-bold">${s.team}</span> <span class="text-[10px] text-gray-500">${s.collab}</span> <br>
+                            <span class="text-gray-300 font-mono font-bold">[${s.num}]</span> <span class="text-white">${s.name}</span>
                         </td>
-                        <td class="p-4 text-right text-gray-500 font-mono">${s.raw}</td>
+                        <td class="p-4 text-right text-gray-400 font-mono">${s.raw}</td>
                         <td class="p-4 text-right text-yellow-500 font-bold font-mono">${s.available}</td>
                         <td class="p-4 text-center">
                             <button onclick="event.stopPropagation(); deleteRow('${s.lastIdx}')" class="px-3 py-1 bg-red-900/30 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors">삭제</button>
@@ -263,21 +266,24 @@
             });
         }
 
-        function fillForm(t, c, n, nm, qty, idx) {
+        // 💡 수정 모드 활성화 및 데이터 채우기
+        function fillForm(team, collab, num, name, qty, idx) {
             isEditMode = true;
             document.getElementById('editIdx').value = idx;
             document.getElementById('editIndicator').classList.remove('hidden');
-            document.getElementById('formContainer').style.borderColor = "#ef4444";
+            document.getElementById('formContainer').style.borderColor = "#ef4444"; // 수정 모드 전용 레드 컬러
             document.getElementById('submitBtn').innerText = "기존 데이터 수정하기 (UPDATE)";
+            document.getElementById('submitBtn').className = "w-full bg-red-600 hover:bg-red-500 py-4 rounded-xl font-black text-white text-base shadow-lg transition-all active:scale-95";
 
-            document.getElementById('teamSelect').value = t;
+            // 폼 데이터 바인딩
+            document.getElementById('teamSelect').value = team;
             updateCollabOptions();
-            document.getElementById('collabSelect').value = c;
-            document.getElementById('pNum').value = n;
-            document.getElementById('pName').value = nm;
+            document.getElementById('collabSelect').value = collab;
+            document.getElementById('pNum').value = String(num);
+            document.getElementById('pName').value = name;
             document.getElementById('qty').value = qty;
             
-            window.scrollTo({ top:0, behavior:'smooth' });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function resetForm() {
@@ -286,12 +292,14 @@
             document.getElementById('mainForm').reset();
             document.getElementById('editIndicator').classList.add('hidden');
             document.getElementById('submitBtn').innerText = "데이터 기록 저장하기";
-            changeMode(curMode);
+            changeMode(curMode); // UI 컬러 원복
         }
 
         document.getElementById('mainForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
+            const originalBtnText = btn.innerText;
+            
             const payload = {
                 method: isEditMode ? 'UPDATE' : 'INSERT',
                 idx: document.getElementById('editIdx').value,
@@ -303,19 +311,30 @@
                 qty: document.getElementById('qty').value
             };
 
-            btn.disabled = true; btn.innerText = "처리 중...";
+            if(!payload.team || !payload.collab || !payload.qty) { alert("필수 항목을 모두 입력하세요."); return; }
+
+            btn.disabled = true; 
+            btn.innerText = isEditMode ? "데이터 수정 중..." : "새로운 데이터 저장 중...";
+            
             try {
-                await fetch(API_URL, { method:'POST', mode:'no-cors', body:JSON.stringify(payload) });
-                location.reload();
-            } catch (err) { alert("처리 실패"); btn.disabled = false; }
+                await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+                // 구글 시트 저장 시간을 고려하여 약간의 지연 후 리로드
+                setTimeout(() => location.reload(), 800);
+            } catch (err) {
+                alert("서버 통신 오류가 발생했습니다.");
+                btn.disabled = false;
+                btn.innerText = originalBtnText;
+            }
         });
 
         function deleteRow(idx) { 
-            if(confirm("정말로 삭제하시겠습니까?")) {
+            if(confirm("이 기록을 정말로 삭제하시겠습니까?")) {
+                document.getElementById('status').innerText = "● DELETING...";
                 fetch(API_URL,{method:'POST',mode:'no-cors',body:JSON.stringify({method:'DELETE',idx:idx})})
-                .then(()=>location.reload()); 
+                .then(()=>setTimeout(() => location.reload(), 500)); 
             }
         }
+
         window.onload = init;
     </script>
 </body>
