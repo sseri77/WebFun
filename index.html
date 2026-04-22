@@ -3,41 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Marking-Kit Pro Ops v13.0</title>
+    <title>Marking-Kit Pro Ops v17.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #1a1c1e; color: #e2e2e2; font-family: sans-serif; }
         .card { background-color: #2a2d31; border: 1px solid #3f444c; border-radius: 12px; }
-        .input-field { background-color: #1a1c1e; border: 1px solid #3f444c; color: white; border-radius: 8px; padding: 10px; font-size: 14px; }
-        .btn-toggle { background-color: #3f444c; color: #a1a1a1; font-weight: bold; border-radius: 8px; }
+        .input-field { background-color: #1a1c1e; border: 1px solid #3f444c; color: white; border-radius: 8px; padding: 12px; font-size: 14px; }
+        .btn-toggle { background-color: #3f444c; color: #a1a1a1; font-weight: bold; border-radius: 8px; transition: 0.2s; }
         .active-in { background-color: #2563eb !important; color: white !important; }
         .active-process { background-color: #d97706 !important; color: white !important; }
         .active-out { background-color: #dc2626 !important; color: white !important; }
         tr.row-link:hover { background-color: #32363c; cursor: pointer; }
+        .page-btn { padding: 6px 12px; border-radius: 6px; background: #3f444c; font-size: 12px; }
+        .page-btn.active { background: #2563eb; color: white; }
     </style>
 </head>
 <body class="p-4 md:p-8">
     <div class="max-w-5xl mx-auto">
-        <header class="mb-6 flex justify-between items-center">
-            <h1 class="text-lg font-bold text-blue-400">Marking-Kit Pro Ops v13.0</h1>
-            <div id="status" class="text-[10px] font-mono text-blue-500">● READY</div>
+        <header class="mb-6 flex justify-between items-center text-blue-400">
+            <h1 class="text-xl font-bold uppercase tracking-tight">Marking-Kit Pro Ops v17.0</h1>
+            <div id="status" class="text-[10px] font-mono font-bold italic">● READY</div>
         </header>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 text-center">
-            <div class="card p-3 border-t-4 border-blue-500"><p class="text-[9px] text-gray-500">미재단</p><p class="text-lg font-bold" id="totalRaw">0</p></div>
-            <div class="card p-3 border-t-4 border-yellow-500"><p class="text-[9px] text-gray-500">가용재고</p><p class="text-lg font-bold text-yellow-500" id="totalAvailable">0</p></div>
-            <div class="card p-3 border-t-4 border-green-500"><p class="text-[9px] text-gray-500">누적출고</p><p class="text-lg font-bold text-green-500" id="totalOut">0</p></div>
-            <div class="card p-3 border-t-4 border-purple-500"><p class="text-[9px] text-gray-500">자산합계</p><p class="text-lg font-bold text-purple-400" id="totalAsset">0</p></div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center text-xs">
+            <div class="card p-3 border-t-4 border-blue-600 font-bold"><p class="text-gray-500">미재단 원단</p><p class="text-lg" id="totalRaw">0</p></div>
+            <div class="card p-3 border-t-4 border-yellow-600 font-bold"><p class="text-gray-500 text-yellow-500">가용재고</p><p class="text-lg" id="totalAvailable">0</p></div>
+            <div class="card p-3 border-t-4 border-green-600 font-bold"><p class="text-gray-500">누적 출고</p><p class="text-lg" id="totalOut">0</p></div>
+            <div class="card p-3 border-t-4 border-purple-600 font-bold"><p class="text-gray-500">총 자산</p><p class="text-lg" id="totalAsset">0</p></div>
         </div>
 
-        <section class="card p-5 shadow-xl mb-6">
-            <div class="flex justify-between items-center mb-5">
+        <section class="card p-6 shadow-2xl mb-8">
+            <div class="flex justify-between items-center mb-6">
                 <div class="flex gap-1 p-1 bg-[#1a1c1e] rounded-lg">
-                    <button onclick="setMode('입고')" id="modeIn" class="btn-toggle active-in px-4 py-2 text-xs">입고</button>
-                    <button onclick="setMode('공정')" id="modeProcess" class="btn-toggle px-4 py-2 text-xs">재단</button>
-                    <button onclick="setMode('출고')" id="modeOut" class="btn-toggle px-4 py-2 text-xs">출고</button>
+                    <button onclick="setMode('입고')" id="modeIn" class="btn-toggle active-in px-8 py-2.5 text-xs">입고</button>
+                    <button onclick="setMode('공정')" id="modeProcess" class="btn-toggle px-8 py-2.5 text-xs">재단</button>
+                    <button onclick="setMode('출고')" id="modeOut" class="btn-toggle px-8 py-2.5 text-xs">출고</button>
                 </div>
-                <div id="modeLabel" class="text-[10px] font-bold text-blue-500 italic">● 입고 모드</div>
+                <div id="modeLabel" class="text-[10px] font-black text-blue-500 uppercase italic">● 입고 모드 활성</div>
             </div>
 
             <form id="mainForm" class="space-y-4">
@@ -45,50 +47,49 @@
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[10px] text-gray-500 ml-1">구단명 (시트에서 불러옴)</label>
-                        <select id="teamSelect" onchange="checkDirect(this)" class="input-field w-full mt-1"></select>
-                        <input type="text" id="manualTeam" class="input-field w-full hidden mt-2" placeholder="새 구단명 입력">
+                        <label class="text-[10px] text-gray-400 font-bold ml-1 uppercase">구단 / 콜라보 조합 선택</label>
+                        <select id="teamSelect" onchange="toggleManual(this)" class="input-field w-full mt-1"></select>
+                        <input type="text" id="manualTeam" class="input-field w-full hidden mt-2 border-blue-900" placeholder="신규 [구단 콜라보명] 직접 입력">
                     </div>
-                    <div>
-                        <label class="text-[10px] text-gray-500 ml-1">콜라보명 (선택 입력)</label>
-                        <input type="text" id="collabName" class="input-field w-full mt-1" placeholder="예: 슬램덩크, 챔피언 등">
-                    </div>
-                </div>
 
-                <div class="grid grid-cols-3 gap-4">
-                    <div>
-                        <label class="text-[10px] text-gray-500 ml-1">배번</label>
-                        <input type="text" id="pNumber" class="input-field w-full text-center" placeholder="00">
-                    </div>
-                    <div class="col-span-2">
-                        <label class="text-[10px] text-gray-500 ml-1">선수 이름 / 수량 <span id="maxInfo" class="text-red-500 ml-1"></span></label>
-                        <div class="flex gap-2">
-                            <input type="text" id="pName" class="input-field flex-1" placeholder="이름">
-                            <input type="number" id="qty" class="input-field w-20" placeholder="0" required>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="col-span-1">
+                            <label class="text-[10px] text-gray-400 font-bold ml-1 uppercase">배번</label>
+                            <input type="text" id="pNumber" class="input-field w-full text-center mt-1 font-bold" placeholder="00">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="text-[10px] text-gray-400 font-bold ml-1 uppercase">선수 이름</label>
+                            <input type="text" id="pName" class="input-field w-full mt-1" placeholder="이름 입력">
                         </div>
                     </div>
                 </div>
 
-                <div class="pt-2 flex gap-2">
-                    <button type="submit" id="submitBtn" class="flex-1 bg-blue-600 py-4 rounded-xl font-bold text-sm shadow-lg">데이터 저장하기</button>
-                    <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden bg-gray-600 px-6 py-4 rounded-xl font-bold">X</button>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div class="md:col-span-1">
+                        <label class="text-[10px] text-gray-400 font-bold ml-1 uppercase">수량 <span id="maxInfo" class="text-red-500 ml-2"></span></label>
+                        <input type="number" id="qty" class="input-field w-full mt-1 font-bold text-blue-400" placeholder="0" required>
+                    </div>
+                    <div class="md:col-span-2 flex gap-2">
+                        <button type="submit" id="submitBtn" class="flex-1 bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black text-sm shadow-xl transition-all">기록 저장하기</button>
+                        <button type="button" id="cancelBtn" onclick="resetForm()" class="hidden bg-gray-700 px-6 py-4 rounded-xl font-bold">X</button>
+                    </div>
                 </div>
             </form>
         </section>
 
-        <section class="card overflow-hidden">
-            <div class="p-3 bg-[#32363c] flex justify-between items-center border-b border-gray-700">
-                <input type="text" id="searchBar" oninput="searchData()" class="input-field w-48 text-xs" placeholder="검색...">
+        <section class="card overflow-hidden shadow-2xl">
+            <div class="p-4 bg-[#32363c] flex justify-between items-center gap-4">
+                <input type="text" id="searchBar" oninput="searchData()" class="input-field w-full md:w-64 text-xs border-none" placeholder="항목 검색...">
                 <div id="pagination" class="flex gap-1"></div>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left text-[11px]">
+                <table class="w-full text-left text-xs">
                     <thead>
-                        <tr class="bg-[#1a1c1e] text-gray-500 border-b border-gray-800">
-                            <th class="p-3">항목 (클릭 시 자동 입력)</th>
-                            <th class="p-3 text-right">미재단</th>
-                            <th class="p-3 text-right">가용</th>
-                            <th class="p-3 text-center">관리</th>
+                        <tr class="bg-[#1a1c1e] text-gray-500 border-b border-gray-800 font-bold uppercase">
+                            <th class="p-4">구단 / [배번] 선수 (클릭 시 자동 입력)</th>
+                            <th class="p-4 text-right">미재단</th>
+                            <th class="p-4 text-right text-yellow-500">가용재고</th>
+                            <th class="p-4 text-center">관리</th>
                         </tr>
                     </thead>
                     <tbody id="dataTable" class="divide-y divide-gray-800"></tbody>
@@ -98,7 +99,7 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbw9jO5TLGGgy2hTXRM2rnoj8exDwlKmAnRsknfJ7zVfSrRRnK5hpptyrzxa9QDecOgG_Q/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbwu4Hj-VPlCiemkKUIziqoxY22hh6Y-wZ1HQKVYY-vC1Kf87hNqauJIeZ23WUyrXei3Wg/exec";
         let rawData = [], teamList = [], summary = {}, filteredKeys = [];
         let curMode = "입고", curPage = 1, pageSize = 10;
 
@@ -111,12 +112,12 @@
                 teamList = d.teams || [];
                 
                 const ts = document.getElementById('teamSelect');
-                ts.innerHTML = '<option value="">-- 구단 선택 --</option>';
+                ts.innerHTML = '<option value="">-- 구단/콜라보 선택 --</option>';
                 teamList.forEach(t => ts.innerHTML += `<option value="${t.name}">${t.name}</option>`);
-                ts.innerHTML += '<option value="direct">➕ 직접 입력</option>';
+                ts.innerHTML += '<option value="direct">➕ 직접 입력(신규 조합)</option>';
 
                 processData();
-                document.getElementById('status').innerText = "● STABLE";
+                document.getElementById('status').innerText = "● ONLINE";
             } catch (e) { document.getElementById('status').innerText = "● ERROR"; }
         }
 
@@ -129,13 +130,13 @@
                 const q = parseInt(item.amount);
                 if (item.action === '입고') { summary[key].raw += q; rT += q; }
                 else if (item.action === '공정') { summary[key].raw -= q; summary[key].available += q; rT -= q; aT += q; }
-                else if (item.action === '출고') { summary[key].available -= q; aT -= amt; oT += q; }
+                else if (item.action === '출고') { summary[key].available -= q; aT -= q; oT += q; }
             });
             searchData();
-            document.getElementById('totalRaw').innerText = rT;
-            document.getElementById('totalAvailable').innerText = aT;
-            document.getElementById('totalOut').innerText = oT;
-            document.getElementById('totalAsset').innerText = rT + aT;
+            document.getElementById('totalRaw').innerText = rT.toLocaleString();
+            document.getElementById('totalAvailable').innerText = aT.toLocaleString();
+            document.getElementById('totalOut').innerText = oT.toLocaleString();
+            document.getElementById('totalAsset').innerText = (rT + aT).toLocaleString();
         }
 
         function searchData() {
@@ -154,12 +155,12 @@
                 const s = summary[key];
                 const tr = document.createElement('tr');
                 tr.className = "row-link";
-                tr.innerHTML = `<td class="p-3" onclick="clickToForm('${key}')">${key}</td>
-                    <td class="p-3 text-right text-gray-500">${s.raw}</td>
-                    <td class="p-3 text-right text-yellow-500 font-bold">${s.available}</td>
-                    <td class="p-3 text-center">
-                        <button onclick="startEdit('${s.lastIdx}')" class="text-blue-500 mr-2">수정</button>
-                        <button onclick="deleteRow('${s.lastIdx}')" class="text-red-500">삭제</button>
+                tr.innerHTML = `<td class="p-4 font-bold" onclick="clickToForm('${key}')">${key}</td>
+                    <td class="p-4 text-right text-gray-500" onclick="clickToForm('${key}')">${s.raw}</td>
+                    <td class="p-4 text-right text-yellow-500 font-bold" onclick="clickToForm('${key}')">${s.available}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="startEdit('${s.lastIdx}')" class="text-blue-500 mr-2 font-bold">수정</button>
+                        <button onclick="deleteRow('${s.lastIdx}')" class="text-red-500 font-bold">삭제</button>
                     </td>`;
                 tbody.appendChild(tr);
             });
@@ -167,32 +168,22 @@
             const totalPages = Math.ceil(filteredKeys.length / pageSize);
             pg.innerHTML = '';
             for(let i=1; i<=totalPages; i++) {
-                pg.innerHTML += `<button onclick="curPage=${i}; renderTable();" class="px-2 py-1 text-[10px] rounded ${i===curPage?'bg-blue-600':'bg-gray-700'}">${i}</button>`;
+                pg.innerHTML += `<button onclick="curPage=${i}; renderTable();" class="page-btn ${i===curPage?'active':''}">${i}</button>`;
             }
         }
 
-        function checkDirect(sel) {
+        function toggleManual(sel) {
             document.getElementById('manualTeam').classList.toggle('hidden', sel.value !== 'direct');
         }
 
         function clickToForm(key) {
             const s = summary[key];
             const ts = document.getElementById('teamSelect');
+            ts.value = s.team;
             
-            // 시트에서 불러온 구단 목록과 일치하는지 확인 (콜라보 분리 로직)
-            let matched = false;
-            for(let t of teamList) {
-                if(s.team.startsWith(t.name)) {
-                    ts.value = t.name;
-                    document.getElementById('collabName').value = s.team.replace(t.name, "").trim();
-                    matched = true;
-                    break;
-                }
-            }
-            if(!matched) {
-                ts.value = "direct"; checkDirect(ts);
+            if(ts.value === "") { // 목록에 없는 구단이면 직접 입력창 활성화
+                ts.value = "direct"; toggleManual(ts);
                 document.getElementById('manualTeam').value = s.team;
-                document.getElementById('collabName').value = "";
             } else {
                 document.getElementById('manualTeam').classList.add('hidden');
             }
@@ -209,8 +200,8 @@
 
         function setMode(m) {
             curMode = m;
-            document.getElementById('modeLabel').innerText = `● ${m} 모드`;
-            ['modeIn', 'modeProcess', 'modeOut'].forEach(id => document.getElementById(id).className = 'btn-toggle px-4 py-2 text-xs');
+            document.getElementById('modeLabel').innerText = `● ${m} 모드 활성`;
+            ['modeIn', 'modeProcess', 'modeOut'].forEach(id => document.getElementById(id).className = 'btn-toggle px-8 py-2.5 text-xs');
             const map = {'입고':'modeIn', '공정':'modeProcess', '출고':'modeOut'};
             const cls = {'입고':'active-in', '공정':'active-process', '출고':'active-out'};
             document.getElementById(map[m]).classList.add(cls[m]);
@@ -222,21 +213,20 @@
             e.preventDefault();
             const editIdx = document.getElementById('editIdx').value;
             const ts = document.getElementById('teamSelect').value;
-            const bTeam = ts === 'direct' ? document.getElementById('manualTeam').value.trim() : ts;
-            const cName = document.getElementById('collabName').value.trim();
+            const finalTeam = ts === 'direct' ? document.getElementById('manualTeam').value.trim() : ts;
             
-            if(!bTeam) { alert("구단을 선택하거나 입력하세요."); return; }
+            if(!finalTeam) { alert("구단을 선택하거나 입력하세요."); return; }
 
             const qtyVal = parseInt(document.getElementById('qty').value);
             const maxVal = parseInt(document.getElementById('qty').max);
             if(curMode !== '입고' && !editIdx && maxVal && qtyVal > maxVal) {
-                alert(`가용 재고를 초과했습니다.`); return;
+                alert(`가용 재고를 초과할 수 없습니다.`); return;
             }
 
             const payload = {
                 method: editIdx ? 'UPDATE' : 'INSERT',
-                idx: editIdx, baseTeam: bTeam, collabName: cName, isNewTeam: (ts === 'direct'),
-                playerNumber: document.getElementById('pNumber').value,
+                idx: editIdx, team: finalTeam, isNew: (ts === 'direct'),
+                playerNumber: document.getElementById('pNumber').value.toString(),
                 playerName: document.getElementById('pName').value,
                 amount: qtyVal, action: curMode
             };
@@ -257,7 +247,7 @@
             clickToForm(`${item.team} | [${item.playerNumber}] ${item.playerName}`);
             setMode(item.action);
             document.getElementById('cancelBtn').classList.remove('hidden');
-            document.getElementById('submitBtn').innerText = "수정 완료";
+            document.getElementById('submitBtn').innerText = "수정 정보 저장";
         }
         window.onload = init;
     </script>
