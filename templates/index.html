@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Marking-Kit Pro Ops v4.7</title>
+    <title>Marking-Kit Pro Ops v5.0</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #1a1c1e; color: #e2e2e2; font-family: sans-serif; }
@@ -13,7 +13,6 @@
         .active-in { background-color: #2563eb !important; color: white !important; border: 2px solid #60a5fa; }
         .active-process { background-color: #d97706 !important; color: white !important; border: 2px solid #fbbf24; }
         .active-out { background-color: #dc2626 !important; color: white !important; border: 2px solid #f87171; }
-        /* 추가 스타일 */
         .btn-edit { color: #60a5fa; margin-right: 8px; }
         .btn-delete { color: #f87171; }
     </style>
@@ -23,7 +22,7 @@
         <header class="mb-8 flex justify-between items-end">
             <div>
                 <h1 class="text-2xl font-bold text-blue-400">Marking-Kit Pro Ops</h1>
-                <p class="text-gray-400 text-sm">데이터 관리 시스템 v4.7</p>
+                <p class="text-gray-400 text-sm">데이터 관리 시스템 v5.0 (ID-Based)</p>
             </div>
             <div id="status" class="text-xs text-blue-500 font-mono italic">● SYNCING...</div>
         </header>
@@ -58,9 +57,7 @@
             </div>
 
             <form id="mainForm" class="space-y-4">
-                <input type="hidden" id="editIndex" value="">
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="hidden" id="editId" value=""> <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div id="selectionArea" class="md:col-span-2 hidden">
                         <label class="block text-[10px] text-blue-400 mb-1 font-bold">기존 목록에서 선택</label>
                         <select id="itemSelector" onchange="bindSelectedItem(this)" class="input-field w-full p-4 rounded-lg border-2 border-blue-900">
@@ -73,8 +70,8 @@
                             <option value="">로딩 중...</option>
                         </select>
                         <div id="directInputGroup" class="hidden space-y-2 mt-2">
-                            <input type="text" id="directBaseTeam" class="input-field w-full p-3 rounded-lg" placeholder="구단명 (예: LG)">
-                            <input type="text" id="directCollab" class="input-field w-full p-3 rounded-lg" placeholder="콜라보명 (예: 숀)">
+                            <input type="text" id="directBaseTeam" class="input-field w-full p-3 rounded-lg" placeholder="구단명">
+                            <input type="text" id="directCollab" class="input-field w-full p-3 rounded-lg" placeholder="콜라보명">
                         </div>
                     </div>
                     <div>
@@ -91,7 +88,7 @@
                     </div>
                 </div>
                 <div class="flex gap-2">
-                    <button type="submit" id="submitBtn" class="flex-1 bg-blue-600 text-white font-bold py-4 rounded-lg active:scale-95 transition-all">기록하기</button>
+                    <button type="submit" id="submitBtn" class="flex-1 bg-blue-600 text-white font-bold py-4 rounded-lg">기록하기</button>
                     <button type="button" id="cancelEditBtn" onclick="resetForm()" class="hidden w-24 bg-gray-600 text-white font-bold py-4 rounded-lg">취소</button>
                 </div>
             </form>
@@ -113,13 +110,13 @@
     </div>
 
     <script>
-        const API_URL = "/api/inbound"; // 반드시 자신의 GAS URL로 변경하세요
+        const API_URL = "자신의_GAS_배포_URL_입력"; 
         let currentMode = "입고";
         let currentSummary = {};
-        let rawInventoryData = []; // 전체 원본 데이터를 담을 배열
+        let rawInventoryData = [];
 
         function setMode(mode) {
-            if(document.getElementById('editIndex').value !== "") return; // 수정 중 모드변경 방지
+            if(document.getElementById('editId').value !== "") return;
             currentMode = mode;
             document.getElementById('selectionArea').classList.toggle('hidden', mode === '입고');
             const cfg = {
@@ -128,10 +125,9 @@
                 '출고': ['active-out', 'bg-red-600', '최종 출고']
             };
             ['modeIn', 'modeProcess', 'modeOut'].forEach(id => document.getElementById(id).className = 'btn-toggle px-4 py-2 rounded-md text-xs font-bold');
-            const target = document.getElementById(`mode${mode === '입고' ? 'In' : (mode === '공정' ? 'Process' : 'Out')}`);
-            target.classList.add(cfg[mode][0]);
+            document.getElementById(`mode${mode === '입고' ? 'In' : (mode === '공정' ? 'Process' : 'Out')}`).classList.add(cfg[mode][0]);
             const btn = document.getElementById('submitBtn');
-            btn.className = `flex-1 ${cfg[mode][1]} text-white font-bold py-4 rounded-lg active:scale-95 transition-all`;
+            btn.className = `flex-1 ${cfg[mode][1]} text-white font-bold py-4 rounded-lg transition-all`;
             btn.innerText = cfg[mode][2];
             if(mode !== '입고') updateSelector();
         }
@@ -141,8 +137,7 @@
                 document.getElementById('status').innerText = "● SYNCING...";
                 const res = await fetch(API_URL);
                 const result = await res.json();
-                
-                rawInventoryData = result.inventory; // 원본 데이터 저장
+                rawInventoryData = result.inventory;
 
                 const select = document.getElementById('teamNameSelect');
                 select.innerHTML = '<option value="">-- 선택 --</option>';
@@ -152,15 +147,15 @@
                 currentSummary = {};
                 let rT = 0, aT = 0, oT = 0;
                 
-                result.inventory.forEach((item, index) => {
+                result.inventory.forEach((item) => {
                     const amt = parseInt(item.amount) || 0;
                     const key = `${item.team} | [${item.playerNumber}] ${item.playerName}`;
-                    if (!currentSummary[key]) currentSummary[key] = { raw: 0, available: 0, lastIndex: index };
+                    if (!currentSummary[key]) currentSummary[key] = { raw: 0, available: 0, id: item.id };
                     
                     if (item.action === '입고') { currentSummary[key].raw += amt; rT += amt; }
                     else if (item.action === '공정') { currentSummary[key].raw -= amt; currentSummary[key].available += amt; rT -= amt; aT += amt; }
                     else if (item.action === '출고') { currentSummary[key].available -= amt; aT -= amt; oT += amt; }
-                    currentSummary[key].lastIndex = index; // 가장 최근 기록된 인덱스 저장
+                    currentSummary[key].id = item.id; // 마지막 기록의 ID 보관
                 });
 
                 updateTable();
@@ -177,73 +172,58 @@
             tableBody.innerHTML = '';
             Object.keys(currentSummary).sort().forEach(key => {
                 const row = currentSummary[key];
-                const idx = row.lastIndex; // 수정을 위해 마지막 데이터 인덱스 활용
                 tableBody.innerHTML += `
                     <tr class="border-b border-gray-800">
                         <td class="p-4 text-sm">${key}</td>
                         <td class="p-4 text-sm text-right text-gray-500">${row.raw}</td>
                         <td class="p-4 text-sm text-right text-blue-400 font-bold">${row.available}</td>
                         <td class="p-4 text-center">
-                            <button onclick="startEdit(${idx})" class="btn-edit text-xs">수정</button>
-                            <button onclick="deleteRecord(${idx})" class="btn-delete text-xs">삭제</button>
+                            <button onclick="startEdit('${row.id}')" class="btn-edit text-xs">수정</button>
+                            <button onclick="deleteRecord('${row.id}')" class="btn-delete text-xs">삭제</button>
                         </td>
                     </tr>`;
             });
         }
 
-        // 수정 시작
-        function startEdit(index) {
-            const data = rawInventoryData[index];
+        function startEdit(id) {
+            const data = rawInventoryData.find(item => item.id === id);
             if(!data) return;
 
-            document.getElementById('editIndex').value = index;
-            document.getElementById('formTitle').innerText = "📝 기록 수정 중...";
+            document.getElementById('editId').value = id;
+            document.getElementById('formTitle').innerText = "📝 기록 수정 중 (ID: " + id + ")";
             document.getElementById('cancelEditBtn').classList.remove('hidden');
             document.getElementById('submitBtn').innerText = "수정 완료";
             
-            // 데이터 바인딩
             setMode(data.action);
             document.getElementById('teamNameSelect').value = data.team;
             document.getElementById('playerNumber').value = data.playerNumber;
             document.getElementById('playerName').value = data.playerName;
             document.getElementById('quantity').value = data.amount;
-            
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // 폼 초기화
         function resetForm() {
             document.getElementById('mainForm').reset();
-            document.getElementById('editIndex').value = "";
+            document.getElementById('editId').value = "";
             document.getElementById('formTitle').innerText = "🛠️ 작업 기록";
             document.getElementById('cancelEditBtn').classList.add('hidden');
             setMode('입고');
         }
 
-        // 삭제 처리
-        async function deleteRecord(index) {
-            if(!confirm("정말로 이 기록을 삭제하시겠습니까? (재고 계산에 즉시 반영됩니다)")) return;
-            
+        async function deleteRecord(id) {
+            if(!confirm("이 기록을 삭제하시겠습니까? ID: " + id)) return;
             document.getElementById('status').innerText = "● DELETING...";
             try {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ 
-                        method: 'DELETE', 
-                        index: index + 1 // 시트 행 번호는 index + 2 (헤더 제외 로직에 따라 조절 필요)
-                    })
-                });
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ method: 'DELETE', id: id }) });
                 alert('삭제되었습니다.');
                 location.reload();
             } catch (err) { alert('삭제 실패'); }
         }
 
-        // 기록하기 및 수정하기 통합 처리
         document.getElementById('mainForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const editIdx = document.getElementById('editIndex').value;
+            const editId = document.getElementById('editId').value;
             const btn = document.getElementById('submitBtn');
-            
             const teamSelect = document.getElementById('teamNameSelect').value;
             let baseTeam = "", collabName = "", finalTeam = "";
             
@@ -257,34 +237,25 @@
                 baseTeam = parts[0]; collabName = parts.slice(1).join(' ');
             }
 
-            const qty = parseInt(document.getElementById('quantity').value) || 0;
-            const num = document.getElementById('playerNumber').value;
-            const name = document.getElementById('playerName').value;
-
             const payload = {
-                method: editIdx === "" ? 'INSERT' : 'UPDATE',
-                index: editIdx !== "" ? parseInt(editIdx) + 1 : null,
+                method: editId === "" ? 'INSERT' : 'UPDATE',
+                id: editId,
                 action: currentMode,
                 team: finalTeam,
-                baseTeam,
-                collabName,
-                amount: qty,
-                playerNumber: num.includes('번') ? num : num + "번", // 02 -> 02번 강제화
-                playerName: name
+                baseTeam, collabName,
+                amount: parseInt(document.getElementById('quantity').value) || 0,
+                playerNumber: document.getElementById('playerNumber').value,
+                playerName: document.getElementById('playerName').value
             };
 
             btn.disabled = true; btn.innerText = "전송 중...";
             try {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                alert(editIdx === "" ? '기록 완료' : '수정 완료');
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                alert(editId === "" ? '기록 완료' : '수정 완료');
                 location.reload();
             } catch (err) { alert('전송 실패'); btn.disabled = false; }
         });
 
-        // 나머지 기존 유틸 함수들 유지
         function toggleDirect(sel) { document.getElementById('directInputGroup').classList.toggle('hidden', sel.value !== 'direct'); }
         function updateSelector() {
             const selector = document.getElementById('itemSelector');
