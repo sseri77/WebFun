@@ -16,6 +16,9 @@
         .row-link { cursor: pointer; transition: 0.2s; }
         .row-link:hover { background-color: #363b42; }
         input:focus, select:focus { outline: 2px solid #2563eb; border-color: transparent; }
+        .pagination-btn { padding: 6px 12px; background: #3f444c; border-radius: 6px; font-size: 12px; transition: 0.2s; }
+        .pagination-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .pagination-btn:not(:disabled):hover { background: #4b5563; }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -53,17 +56,13 @@
                 </div>
                 
                 <div id="editIndicator" class="hidden flex items-center gap-2 bg-red-900/50 px-3 py-1 rounded-full border border-red-500">
-                    <span class="relative flex h-2 w-2">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                    </span>
+                    <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span></span>
                     <span class="text-[10px] font-bold text-red-200 uppercase tracking-widest">Edit Mode</span>
                 </div>
             </div>
 
             <form id="mainForm" class="space-y-6">
                 <input type="hidden" id="editIdx" value="">
-                
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="flex flex-col gap-2">
                         <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">구단명 선택</label>
@@ -76,7 +75,6 @@
                         <input type="text" id="manualCollab" class="input-field hidden mt-1 border-blue-500" placeholder="신규 콜라보 직접 입력">
                     </div>
                 </div>
-
                 <div class="grid grid-cols-3 md:grid-cols-4 gap-4">
                     <div class="flex flex-col gap-2">
                         <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">배번</label>
@@ -87,11 +85,10 @@
                         <input type="text" id="pName" class="input-field" placeholder="이름 입력">
                     </div>
                     <div class="col-span-3 md:col-span-1 flex flex-col gap-2">
-                        <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">수량 <span id="maxQty" class="text-red-500 ml-1"></span></label>
+                        <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">수량</label>
                         <input type="number" id="qty" class="input-field font-bold text-blue-400" placeholder="0" required>
                     </div>
                 </div>
-
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                     <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black text-white text-base shadow-lg transition-all active:scale-95">데이터 기록 저장하기</button>
                     <button type="button" onclick="resetForm()" class="w-full bg-gray-700 hover:bg-gray-600 py-4 rounded-xl font-bold text-white text-base shadow-lg transition-all active:scale-95 text-gray-300">입력창 초기화</button>
@@ -100,51 +97,87 @@
         </section>
 
         <section class="card overflow-hidden">
-            <div class="p-4 bg-[#32363c] flex justify-between items-center gap-4 border-b border-gray-700">
-                <input type="text" id="searchBar" oninput="renderTable()" class="input-field w-full md:w-80 text-xs" placeholder="항목 검색 (구단, 선수, 콜라보)...">
+            <div class="p-4 bg-[#32363c] flex flex-col md:flex-row justify-between items-center gap-4 border-b border-gray-700">
+                <div class="flex items-center gap-2">
+                    <span id="listTitle" class="text-xs font-bold text-blue-400 uppercase tracking-widest">입고 리스트</span>
+                    <span class="text-[10px] text-gray-500">(최근 등록순)</span>
+                </div>
+                <input type="text" id="searchBar" oninput="currentPage=1; renderTable()" class="input-field w-full md:w-64 text-xs" placeholder="리스트 내 검색...">
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
                     <thead>
                         <tr class="bg-[#1a1c1e] text-gray-500 border-b border-gray-800 font-bold uppercase">
-                            <th class="p-4">항목 (클릭 시 수정)</th>
-                            <th class="p-4 text-right">미재단</th>
-                            <th class="p-4 text-right text-yellow-500">가용</th>
+                            <th class="p-4">내용 (클릭 시 수정)</th>
+                            <th class="p-4 text-right">수량</th>
                             <th class="p-4 text-center">동작</th>
                         </tr>
                     </thead>
                     <tbody id="dataTable" class="divide-y divide-gray-800"></tbody>
                 </table>
             </div>
+            <div class="p-4 bg-[#2a2d31] flex justify-center items-center gap-4 border-t border-gray-800">
+                <button onclick="changePage(-1)" id="prevBtn" class="pagination-btn">이전</button>
+                <span id="pageInfo" class="text-[10px] font-mono text-gray-400">1 / 1</span>
+                <button onclick="changePage(1)" id="nextBtn" class="pagination-btn">다음</button>
+            </div>
         </section>
     </div>
 
     <script>
-        // GAS 웹 앱 배포 URL을 여기에 넣으세요
-        const API_URL = "https://script.google.com/macros/s/AKfycbxnoAgwGyy4KSE7izHyCulwBPgVAale15KEL1DKOMqSXRiutFbTimvGAsvR3lsMgB0B_A/exec"; 
+        const API_URL = "https://script.google.com/macros/s/AKfycbzteDdUYyf-DF3Rvf1ba-Hw20Id-aQZbHq8zp2FUVykb4fWa8StJaodEFCeFOVLIZTl0A/exec"; 
         let db = { inbound:[], process:[], outbound:[], teams:[], collabs:[] };
         let curMode = "입고";
         let isEditMode = false;
+        let currentPage = 1;
+        const itemsPerPage = 10;
 
         async function init() {
             try {
                 document.getElementById('status').innerText = "● SYNCING...";
                 const res = await fetch(API_URL);
                 db = await res.json();
+                
+                // 데이터 역순 정렬 (최신순)
+                db.inbound.reverse();
+                db.process.reverse();
+                db.outbound.reverse();
+                
+                calculateSummary();
                 updateFormOptions();
                 renderTable();
                 document.getElementById('status').innerText = "● ONLINE";
             } catch (e) { document.getElementById('status').innerText = "● ERROR"; }
         }
 
+        function calculateSummary() {
+            let totalRaw = 0, totalAvailable = 0, totalOut = 0;
+            db.inbound.forEach(i => totalRaw += Number(i.qty));
+            db.process.forEach(i => { totalRaw -= Number(i.qty); totalAvailable += Number(i.qty); });
+            db.outbound.forEach(i => { totalAvailable -= Number(i.qty); totalOut += Number(i.qty); });
+
+            document.getElementById('totalRaw').innerText = totalRaw.toLocaleString();
+            document.getElementById('totalAvailable').innerText = totalAvailable.toLocaleString();
+            document.getElementById('totalOut').innerText = totalOut.toLocaleString();
+            document.getElementById('totalAsset').innerText = (totalRaw + totalAvailable).toLocaleString();
+        }
+
         function changeMode(m) {
-            if(isEditMode) return; // 수정 모드일 때는 탭 전환 방지 (데이터 일관성)
+            if(isEditMode && !confirm("수정 중인 내용이 사라집니다. 모드를 변경하시겠습니까?")) return;
+            
             curMode = m;
+            isEditMode = false;
+            currentPage = 1;
+            
             const btns = { '입고':'btnIn', '공정':'btnProc', '출고':'btnOut' };
             const clss = { '입고':'active-in', '공정':'active-process', '출고':'active-out' };
+            const titles = { '입고':'입고 리스트', '공정':'재단 리스트', '출고':'출고 리스트' };
+            
             Object.values(btns).forEach(id => document.getElementById(id).className = "btn-toggle px-6 py-2 text-xs");
             document.getElementById(btns[m]).classList.add(clss[m]);
-            
+            document.getElementById('listTitle').innerText = titles[m];
+            document.getElementById('listTitle').className = `text-xs font-bold uppercase tracking-widest ${m==='입고'?'text-blue-400':m==='공정'?'text-yellow-500':'text-red-500'}`;
+
             const submitBtn = document.getElementById('submitBtn');
             const container = document.getElementById('formContainer');
             
@@ -158,29 +191,26 @@
                 submitBtn.className = "w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black text-white text-base shadow-lg transition-all active:scale-95";
                 container.style.borderColor = "#2563eb";
             }
+            
+            resetForm();
             updateFormOptions();
+            renderTable();
         }
 
         function updateFormOptions() {
             const tSel = document.getElementById('teamSelect');
-            const cSel = document.getElementById('collabSelect');
-            const mTeam = document.getElementById('manualTeam');
-            const mCollab = document.getElementById('manualCollab');
-
             tSel.innerHTML = '<option value="">-- 구단 선택 --</option>';
-            cSel.innerHTML = '<option value="">-- 콜라보 선택 --</option>';
-
+            
             if (curMode === '입고') {
                 db.teams.forEach(t => tSel.innerHTML += `<option value="${t}">${t}</option>`);
                 tSel.innerHTML += '<option value="direct">➕ 직접 입력</option>';
             } else {
+                // 재단은 입고에서, 출고는 재단에서 팀 리스트를 가져옴
                 const source = curMode === '공정' ? db.inbound : db.process;
                 const uniqueTeams = [...new Set(source.map(item => item.team))];
                 uniqueTeams.forEach(t => tSel.innerHTML += `<option value="${t}">${t}</option>`);
             }
-            mTeam.classList.add('hidden'); 
-            mCollab.classList.add('hidden');
-            cSel.classList.remove('hidden');
+            updateCollabOptions();
         }
 
         function updateCollabOptions() {
@@ -193,12 +223,10 @@
                 cSel.classList.add('hidden');
                 mTeam.classList.remove('hidden');
                 mCollab.classList.remove('hidden');
-                cSel.value = ""; 
             } else {
                 cSel.classList.remove('hidden');
                 mTeam.classList.add('hidden');
                 mCollab.classList.add('hidden');
-                
                 cSel.innerHTML = '<option value="">-- 콜라보 선택 --</option>';
                 if (tVal !== "") {
                     if(curMode === '입고') {
@@ -216,70 +244,75 @@
         function renderTable() {
             const tbody = document.getElementById('dataTable');
             const search = document.getElementById('searchBar').value.toLowerCase();
+            
+            // 현재 모드에 맞는 데이터 선택
+            let sourceData = [];
+            if(curMode === '입고') sourceData = db.inbound;
+            else if(curMode === '공정') sourceData = db.process;
+            else sourceData = db.outbound;
+
+            // 검색 필터링
+            const filtered = sourceData.filter(item => 
+                item.team.toLowerCase().includes(search) || 
+                item.name.toLowerCase().includes(search) || 
+                item.collab.toLowerCase().includes(search) ||
+                String(item.num).includes(search)
+            );
+
+            // 페이지네이션 계산
+            const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+            if(currentPage > totalPages) currentPage = totalPages;
+            
+            const start = (currentPage - 1) * itemsPerPage;
+            const pagedData = filtered.slice(start, start + itemsPerPage);
+
+            document.getElementById('pageInfo').innerText = `${currentPage} / ${totalPages}`;
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage === totalPages;
+
             tbody.innerHTML = '';
-            
-            let summary = {};
-            let totalRaw = 0, totalAvailable = 0, totalOut = 0;
-            const allData = [...db.inbound, ...db.process, ...db.outbound];
-            
-            allData.forEach(item => {
-                const qty = Number(item.qty);
-                if(item.action === '입고') totalRaw += qty;
-                else if(item.action === '공정') { totalRaw -= qty; totalAvailable += qty; }
-                else if(item.action === '출고') { totalAvailable -= qty; totalOut += qty; }
-
-                const key = `${item.team}|${item.collab}|${item.num}|${item.name}`;
-                if(!summary[key]) {
-                    summary[key] = { raw:0, available:0, team:item.team, collab:item.collab, num:String(item.num), name:item.name, idx:item.idx, lastQty: qty };
-                }
-                
-                if(item.action === '입고') summary[key].raw += qty;
-                else if(item.action === '공정') { summary[key].raw -= qty; summary[key].available += qty; }
-                else if(item.action === '출고') summary[key].available -= qty;
-                
-                summary[key].lastIdx = item.idx; 
-                summary[key].lastQty = qty;
-            });
-
-            document.getElementById('totalRaw').innerText = totalRaw.toLocaleString();
-            document.getElementById('totalAvailable').innerText = totalAvailable.toLocaleString();
-            document.getElementById('totalOut').innerText = totalOut.toLocaleString();
-            document.getElementById('totalAsset').innerText = (totalRaw + totalAvailable).toLocaleString();
-
-            Object.keys(summary).forEach(key => {
-                if(key.toLowerCase().includes(search)) {
-                    const s = summary[key];
-                    const tr = document.createElement('tr');
-                    tr.className = "row-link";
-                    // 💡 여기에 수정 시 필요한 모든 정보와 'idx'를 인자로 전달합니다.
-                    tr.innerHTML = `<td class="p-4" onclick="fillForm('${s.team.replace(/'/g, "\\'")}','${s.collab.replace(/'/g, "\\'")}','${s.num}','${s.name.replace(/'/g, "\\'")}','${s.lastQty}','${s.lastIdx}')">
-                            <span class="text-blue-400 font-bold">${s.team}</span> <span class="text-[10px] text-gray-500">${s.collab}</span> <br>
-                            <span class="text-gray-300 font-mono font-bold">[${s.num}]</span> <span class="text-white">${s.name}</span>
-                        </td>
-                        <td class="p-4 text-right text-gray-400 font-mono">${s.raw}</td>
-                        <td class="p-4 text-right text-yellow-500 font-bold font-mono">${s.available}</td>
-                        <td class="p-4 text-center">
-                            <button onclick="event.stopPropagation(); deleteRow('${s.lastIdx}')" class="px-3 py-1 bg-red-900/30 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors">삭제</button>
-                        </td>`;
-                    tbody.appendChild(tr);
-                }
+            pagedData.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "row-link";
+                tr.innerHTML = `
+                    <td class="p-4" onclick="fillForm('${item.team.replace(/'/g, "\\'")}','${item.collab.replace(/'/g, "\\'")}','${item.num}','${item.name.replace(/'/g, "\\'")}','${item.qty}','${item.idx}')">
+                        <span class="text-blue-400 font-bold">${item.team}</span> <span class="text-[10px] text-gray-500">${item.collab}</span> <br>
+                        <span class="text-gray-300 font-mono font-bold">[${item.num}]</span> <span class="text-white">${item.name}</span>
+                    </td>
+                    <td class="p-4 text-right font-mono font-bold">${Number(item.qty).toLocaleString()}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="event.stopPropagation(); deleteRow('${item.idx}')" class="px-3 py-1 bg-red-900/30 text-red-500 rounded hover:bg-red-500 hover:text-white transition-colors">삭제</button>
+                    </td>`;
+                tbody.appendChild(tr);
             });
         }
 
-        // 💡 수정 모드 활성화 및 데이터 채우기
+        function changePage(offset) {
+            currentPage += offset;
+            renderTable();
+        }
+
         function fillForm(team, collab, num, name, qty, idx) {
             isEditMode = true;
             document.getElementById('editIdx').value = idx;
             document.getElementById('editIndicator').classList.remove('hidden');
-            document.getElementById('formContainer').style.borderColor = "#ef4444"; // 수정 모드 전용 레드 컬러
-            document.getElementById('submitBtn').innerText = "기존 데이터 수정하기 (UPDATE)";
-            document.getElementById('submitBtn').className = "w-full bg-red-600 hover:bg-red-500 py-4 rounded-xl font-black text-white text-base shadow-lg transition-all active:scale-95";
-
-            // 폼 데이터 바인딩
-            document.getElementById('teamSelect').value = team;
-            updateCollabOptions();
-            document.getElementById('collabSelect').value = collab;
-            document.getElementById('pNum').value = String(num);
+            document.getElementById('submitBtn').innerText = "선택 데이터 수정하기 (UPDATE)";
+            
+            // 폼에 데이터 채우기
+            // '직접 입력' 데이터일 경우 처리
+            const tSel = document.getElementById('teamSelect');
+            if([...tSel.options].some(o => o.value === team)) {
+                tSel.value = team;
+                updateCollabOptions();
+                document.getElementById('collabSelect').value = collab;
+            } else {
+                tSel.value = 'direct';
+                updateCollabOptions();
+                document.getElementById('manualTeam').value = team;
+                document.getElementById('manualCollab').value = collab;
+            }
+            
+            document.getElementById('pNum').value = num;
             document.getElementById('pName').value = name;
             document.getElementById('qty').value = qty;
             
@@ -291,14 +324,17 @@
             document.getElementById('editIdx').value = "";
             document.getElementById('mainForm').reset();
             document.getElementById('editIndicator').classList.add('hidden');
-            document.getElementById('submitBtn').innerText = "데이터 기록 저장하기";
-            changeMode(curMode); // UI 컬러 원복
+            document.getElementById('manualTeam').classList.add('hidden');
+            document.getElementById('manualCollab').classList.add('hidden');
+            document.getElementById('collabSelect').classList.remove('hidden');
+            
+            const titles = { '입고':'데이터 기록 저장하기', '공정':'재단 데이터 기록하기', '출고':'출고 데이터 기록하기' };
+            document.getElementById('submitBtn').innerText = titles[curMode] || "데이터 기록 저장하기";
         }
 
         document.getElementById('mainForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
-            const originalBtnText = btn.innerText;
             
             const payload = {
                 method: isEditMode ? 'UPDATE' : 'INSERT',
@@ -311,24 +347,22 @@
                 qty: document.getElementById('qty').value
             };
 
-            if(!payload.team || !payload.collab || !payload.qty) { alert("필수 항목을 모두 입력하세요."); return; }
+            if(!payload.team || !payload.qty) { alert("팀과 수량은 필수입니다."); return; }
 
-            btn.disabled = true; 
-            btn.innerText = isEditMode ? "데이터 수정 중..." : "새로운 데이터 저장 중...";
+            btn.disabled = true;
+            btn.innerText = "통신 중...";
             
             try {
                 await fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-                // 구글 시트 저장 시간을 고려하여 약간의 지연 후 리로드
                 setTimeout(() => location.reload(), 800);
             } catch (err) {
-                alert("서버 통신 오류가 발생했습니다.");
+                alert("오류 발생");
                 btn.disabled = false;
-                btn.innerText = originalBtnText;
             }
         });
 
         function deleteRow(idx) { 
-            if(confirm("이 기록을 정말로 삭제하시겠습니까?")) {
+            if(confirm("정말로 삭제하시겠습니까?")) {
                 document.getElementById('status').innerText = "● DELETING...";
                 fetch(API_URL,{method:'POST',mode:'no-cors',body:JSON.stringify({method:'DELETE',idx:idx})})
                 .then(()=>setTimeout(() => location.reload(), 500)); 
