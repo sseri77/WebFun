@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Marking-Kit Pro Ops v22.0 (재고 연동형)</title>
+    <title>Marking-Kit Pro Ops v18.0 - Stock Logic</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #1a1c1e; color: #e2e2e2; font-family: sans-serif; }
@@ -23,25 +23,25 @@
 <body class="p-4 md:p-8">
     <div class="max-w-5xl mx-auto">
         <header class="mb-6 flex justify-between items-center text-blue-400">
-            <h1 class="text-xl font-bold uppercase tracking-tighter">Marking-Kit Pro Ops v22.0</h1>
+            <h1 class="text-xl font-bold uppercase tracking-tighter">Marking-Kit Pro Ops v18.0</h1>
             <div id="status" class="text-[10px] font-mono italic">● READY</div>
         </header>
 
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             <div class="card p-4 rounded-xl text-center border-t-4 border-blue-500 shadow-lg">
-                <h3 class="text-[10px] text-gray-400 uppercase font-bold">미재단 원단</h3>
+                <h3 class="text-[10px] text-gray-400 uppercase font-bold">미재단 원단(입고잔량)</h3>
                 <p class="text-2xl font-black mt-1" id="totalRaw">0</p>
             </div>
             <div class="card p-4 rounded-xl text-center border-t-4 border-yellow-500 shadow-lg">
-                <h3 class="text-[10px] text-gray-400 uppercase font-bold text-yellow-500/80">가용재고</h3>
+                <h3 class="text-[10px] text-gray-400 uppercase font-bold text-yellow-500/80">가용재고(재단잔량)</h3>
                 <p class="text-2xl font-black text-yellow-400 mt-1" id="totalAvailable">0</p>
             </div>
             <div class="card p-4 rounded-xl text-center border-t-4 border-green-500 shadow-lg">
-                <h3 class="text-[10px] text-gray-400 uppercase font-bold text-green-500/80">누적 출고</h3>
+                <h3 class="text-[10px] text-gray-400 uppercase font-bold text-green-500/80">최종 출고 완료</h3>
                 <p class="text-2xl font-black text-green-400 mt-1" id="totalOut">0</p>
             </div>
             <div class="card p-4 rounded-xl text-center border-t-4 border-purple-500 shadow-lg">
-                <h3 class="text-[10px] text-gray-400 uppercase font-bold text-purple-500/80">총 자산</h3>
+                <h3 class="text-[10px] text-gray-400 uppercase font-bold text-purple-500/80">총 자산 수량</h3>
                 <p class="text-2xl font-black text-purple-400 mt-1" id="totalAsset">0</p>
             </div>
         </div>
@@ -53,54 +53,64 @@
                     <button onclick="changeMode('공정')" id="btnProc" class="btn-toggle px-6 py-2 text-xs">재단</button>
                     <button onclick="changeMode('출고')" id="btnOut" class="btn-toggle px-6 py-2 text-xs">출고</button>
                 </div>
+                <div id="editIndicator" class="hidden flex items-center gap-2 bg-red-900/50 px-3 py-1 rounded-full border border-red-500">
+                    <span class="text-[10px] font-bold text-red-200 uppercase tracking-widest">Edit Mode</span>
+                </div>
+            </div>
+
+            <div id="importSection" class="hidden mb-6">
+                <button type="button" onclick="openImportModal()" class="w-full py-3 bg-gray-800 border border-dashed border-gray-500 rounded-xl text-xs text-blue-400 font-bold hover:bg-gray-700 transition-all">
+                    📦 <span id="importBtnText">전단계 잔량 불러오기</span>
+                </button>
             </div>
 
             <form id="mainForm" class="space-y-6">
                 <input type="hidden" id="editIdx" value="">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="flex flex-col gap-2">
-                        <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">구단명</label>
+                        <label class="text-[10px] text-gray-500 font-bold ml-1">구단명</label>
                         <select id="teamSelect" onchange="updateCollabOptions()" class="input-field w-full"></select>
-                        <input type="text" id="manualTeam" class="input-field hidden mt-1 border-blue-500" placeholder="신규 구단 직접 입력">
+                        <input type="text" id="manualTeam" class="input-field hidden mt-1 border-blue-500" placeholder="신규 구단 입력">
                     </div>
                     <div class="flex flex-col gap-2">
-                        <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">콜라보</label>
+                        <label class="text-[10px] text-gray-500 font-bold ml-1">콜라보명</label>
                         <select id="collabSelect" class="input-field w-full"></select>
-                        <input type="text" id="manualCollab" class="input-field hidden mt-1 border-blue-500" placeholder="신규 콜라보 직접 입력">
+                        <input type="text" id="manualCollab" class="input-field hidden mt-1 border-blue-500" placeholder="신규 콜라보 입력">
                     </div>
                 </div>
                 <div class="grid grid-cols-3 md:grid-cols-4 gap-4">
                     <div class="flex flex-col gap-2">
-                        <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">배번</label>
+                        <label class="text-[10px] text-gray-500 font-bold ml-1">배번</label>
                         <input type="text" id="pNum" class="input-field text-center font-bold" placeholder="00">
                     </div>
                     <div class="col-span-2 flex flex-col gap-2">
-                        <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">선수 이름</label>
+                        <label class="text-[10px] text-gray-500 font-bold ml-1">선수 이름</label>
                         <input type="text" id="pName" class="input-field" placeholder="이름 입력">
                     </div>
                     <div class="col-span-3 md:col-span-1 flex flex-col gap-2">
-                        <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">수량</label>
+                        <label class="text-[10px] text-gray-500 font-bold ml-1">수량</label>
                         <input type="number" id="qty" class="input-field font-bold text-blue-400" placeholder="0" required>
                     </div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                    <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black text-white shadow-lg transition-all active:scale-95">데이터 저장</button>
-                    <button type="button" onclick="resetForm()" class="w-full bg-gray-700 hover:bg-gray-600 py-4 rounded-xl font-bold text-gray-300 shadow-lg transition-all active:scale-95">초기화</button>
+                    <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black text-white shadow-lg transition-all active:scale-95">데이터 기록 저장하기</button>
+                    <button type="button" onclick="resetForm()" class="w-full bg-gray-700 hover:bg-gray-600 py-4 rounded-xl font-bold text-gray-300 shadow-lg transition-all active:scale-95">입력창 초기화</button>
                 </div>
             </form>
         </section>
 
         <section class="card overflow-hidden">
-            <div class="p-4 bg-[#32363c] flex justify-between items-center border-b border-gray-700">
-                <span id="listTitle" class="text-xs font-bold text-blue-400 uppercase tracking-widest">입고 잔여 리스트</span>
-                <input type="text" id="searchBar" oninput="currentPage=1; renderTable()" class="input-field w-48 text-xs" placeholder="항목 검색...">
+            <div class="p-4 bg-[#32363c] flex justify-between items-center gap-4 border-b border-gray-700">
+                <span id="listTitle" class="text-xs font-bold text-blue-400 uppercase tracking-widest">입고 잔량 리스트</span>
+                <input type="text" id="searchBar" oninput="currentPage=1; renderTable()" class="input-field w-48 md:w-64 text-xs" placeholder="검색...">
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
                     <thead>
                         <tr class="bg-[#1a1c1e] text-gray-500 border-b border-gray-800 font-bold uppercase">
-                            <th class="p-4">항목 (클릭 시 자동입력)</th>
-                            <th class="p-4 text-right">잔여 수량</th>
+                            <th class="p-4">선수 정보</th>
+                            <th class="p-4 text-right" id="qtyColumnHeader">잔여 수량</th>
+                            <th class="p-4 text-center">동작</th>
                         </tr>
                     </thead>
                     <tbody id="dataTable" class="divide-y divide-gray-800"></tbody>
@@ -114,10 +124,35 @@
         </section>
     </div>
 
+    <div id="importModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="card w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden shadow-2xl border border-gray-600">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-[#2a2d31]">
+                <h3 id="modalTitle" class="font-bold text-sm text-blue-400">전단계 잔량 가져오기</h3>
+                <button onclick="closeImportModal()" class="text-gray-400 hover:text-white text-xl">✕</button>
+            </div>
+            <div class="p-4 bg-[#1a1c1e] border-b border-gray-800">
+                <input type="text" id="modalSearch" oninput="renderModalList()" class="input-field w-full text-xs" placeholder="항목 검색...">
+            </div>
+            <div class="overflow-y-auto flex-1 bg-[#1a1c1e]">
+                <table class="w-full text-xs text-left">
+                    <thead class="bg-[#2a2d31] sticky top-0">
+                        <tr class="text-gray-500 border-b border-gray-800 font-bold">
+                            <th class="p-3">항목</th>
+                            <th class="p-3 text-right">선택 가능 수량</th>
+                            <th class="p-3 text-center">동작</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalTableBody" class="divide-y divide-gray-900"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbzteDdUYyf-DF3Rvf1ba-Hw20Id-aQZbHq8zp2FUVykb4fWa8StJaodEFCeFOVLIZTl0A/exec"; 
         let db = { inbound:[], process:[], outbound:[], teams:[], collabs:[] };
         let curMode = "입고";
+        let isEditMode = false;
         let currentPage = 1;
         const itemsPerPage = 10;
 
@@ -126,52 +161,181 @@
                 document.getElementById('status').innerText = "● SYNCING...";
                 const res = await fetch(API_URL);
                 db = await res.json();
+                
+                calculateSummary();
                 updateFormOptions();
                 renderTable();
-                calculateSummary();
                 document.getElementById('status').innerText = "● ONLINE";
             } catch (e) { document.getElementById('status').innerText = "● ERROR"; }
         }
 
+        // 전체 수량 집계 (대시보드용)
         function calculateSummary() {
-            let totalRaw = 0, totalAvailable = 0, totalOut = 0;
-            db.inbound.forEach(i => totalRaw += Number(i.qty));
-            db.process.forEach(i => { totalRaw -= Number(i.qty); totalAvailable += Number(i.qty); });
-            db.outbound.forEach(i => { totalAvailable -= Number(i.qty); totalOut += Number(i.qty); });
+            let inTotal = 0, procTotal = 0, outTotal = 0;
+            db.inbound.forEach(i => inTotal += Number(i.qty));
+            db.process.forEach(i => procTotal += Number(i.qty));
+            db.outbound.forEach(i => outTotal += Number(i.qty));
 
-            document.getElementById('totalRaw').innerText = totalRaw.toLocaleString();
-            document.getElementById('totalAvailable').innerText = totalAvailable.toLocaleString();
-            document.getElementById('totalOut').innerText = totalOut.toLocaleString();
-            document.getElementById('totalAsset').innerText = (totalRaw + totalAvailable).toLocaleString();
+            document.getElementById('totalRaw').innerText = (inTotal - procTotal).toLocaleString();
+            document.getElementById('totalAvailable').innerText = (procTotal - outTotal).toLocaleString();
+            document.getElementById('totalOut').innerText = outTotal.toLocaleString();
+            document.getElementById('totalAsset').innerText = (inTotal - outTotal + outTotal).toLocaleString(); // 원단+가공완료
+        }
+
+        // 핵심 로직: 선수별 단계 수량 요약 맵 생성
+        function getSummaryMap() {
+            const summary = {};
+            const getKey = (i) => `${i.team}|${i.collab}|${i.num}|${i.name}`;
+
+            db.inbound.forEach(i => {
+                const k = getKey(i);
+                if(!summary[k]) summary[k] = { in:0, proc:0, out:0 };
+                summary[k].in += Number(i.qty);
+            });
+            db.process.forEach(i => {
+                const k = getKey(i);
+                if(!summary[k]) summary[k] = { in:0, proc:0, out:0 };
+                summary[k].proc += Number(i.qty);
+            });
+            db.outbound.forEach(i => {
+                const k = getKey(i);
+                if(!summary[k]) summary[k] = { in:0, proc:0, out:0 };
+                summary[k].out += Number(i.qty);
+            });
+            return summary;
         }
 
         function changeMode(m) {
             curMode = m;
-            const btns = { '입고':'btnIn', '공정':'btnProc', '출고':'btnOut' };
-            const titles = { '입고':'입고 잔여 리스트 (미재단)', '공정':'재단 잔여 리스트 (미출고)', '출고':'출고 완료 리스트' };
-            
-            Object.values(btns).forEach(id => {
-                const btn = document.getElementById(id);
-                if(btn) btn.className = "btn-toggle px-6 py-2 text-xs";
-            });
-            document.getElementById(btns[m]).classList.add(m==='입고'?'active-in':m==='공정'?'active-process':'active-out');
-            document.getElementById('listTitle').innerText = titles[m];
-            
-            const submitBtn = document.getElementById('submitBtn');
-            const container = document.getElementById('formContainer');
-            if(m === '공정') { submitBtn.className = "w-full bg-amber-600 py-4 rounded-xl font-black text-white shadow-lg transition-all"; container.style.borderColor = "#d97706"; }
-            else if(m === '출고') { submitBtn.className = "w-full bg-red-600 py-4 rounded-xl font-black text-white shadow-lg transition-all"; container.style.borderColor = "#dc2626"; }
-            else { submitBtn.className = "w-full bg-blue-600 py-4 rounded-xl font-black text-white shadow-lg transition-all"; container.style.borderColor = "#2563eb"; }
-
+            isEditMode = false;
             currentPage = 1;
+            
+            const btns = { '입고':'btnIn', '공정':'btnProc', '출고':'btnOut' };
+            const clss = { '입고':'active-in', '공정':'active-process', '출고':'active-out' };
+            const titles = { '입고':'입고 잔량 (미재단)', '공정':'재단 잔량 (가용재고)', '출고':'출고 완료 내역' };
+            const borderColors = { '입고':'#2563eb', '공정':'#d97706', '출고':'#dc2626' };
+            
+            Object.values(btns).forEach(id => document.getElementById(id).className = "btn-toggle px-6 py-2 text-xs");
+            document.getElementById(btns[m]).classList.add(clss[m]);
+            document.getElementById('listTitle').innerText = titles[m];
+            document.getElementById('formContainer').style.borderColor = borderColors[m];
+            document.getElementById('qtyColumnHeader').innerText = m === '출고' ? '출고 수량' : '잔여 수량';
+
+            const importSection = document.getElementById('importSection');
+            if(m === '입고') importSection.classList.add('hidden');
+            else {
+                importSection.classList.remove('hidden');
+                document.getElementById('importBtnText').innerText = m === '공정' ? "입고 잔량에서 가져오기" : "재단 잔량에서 가져오기";
+            }
+
+            resetForm();
             renderTable();
         }
+
+        // 메인 테이블 렌더링 (차감 로직 반영)
+        function renderTable() {
+            const tbody = document.getElementById('dataTable');
+            const search = document.getElementById('searchBar').value.toLowerCase();
+            const summaryMap = getSummaryMap();
+            
+            // 현재 모드에 따라 표시할 선수 리스트 추출 및 잔량 계산
+            let displayList = [];
+            for (const key in summaryMap) {
+                const s = summaryMap[key];
+                const [team, collab, num, name] = key.split('|');
+                let qty = 0;
+
+                if (curMode === '입고') qty = s.in - s.proc;
+                else if (curMode === '공정') qty = s.proc - s.out;
+                else if (curMode === '출고') qty = s.out;
+
+                if (qty > 0) {
+                    displayList.push({ team, collab, num, name, qty });
+                }
+            }
+
+            const filtered = displayList.filter(i => i.team.toLowerCase().includes(search) || i.name.toLowerCase().includes(search));
+            const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
+            const start = (currentPage - 1) * itemsPerPage;
+            const paged = filtered.slice(start, start + itemsPerPage);
+
+            document.getElementById('pageInfo').innerText = `${currentPage} / ${totalPages}`;
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage === totalPages;
+
+            tbody.innerHTML = '';
+            paged.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "row-link";
+                const qtyColor = curMode === '입고' ? 'text-blue-400' : (curMode === '공정' ? 'text-yellow-400' : 'text-green-400');
+                
+                tr.innerHTML = `
+                    <td class="p-4" onclick="fillForm('${item.team}','${item.collab}','${item.num}','${item.name}','${item.qty}')">
+                        <span class="text-blue-400 font-bold">${item.team}</span> <span class="text-[10px] text-gray-500">${item.collab}</span><br>
+                        <span class="text-gray-300 font-mono">[${item.num}]</span> ${item.name}
+                    </td>
+                    <td class="p-4 text-right font-bold ${qtyColor}">${item.qty.toLocaleString()}</td>
+                    <td class="p-4 text-center">
+                        <span class="text-[10px] text-gray-600 italic">Tracking...</span>
+                    </td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 모달: 전단계의 "잔량"이 있는 항목만 표시
+        function renderModalList() {
+            const tbody = document.getElementById('modalTableBody');
+            const search = document.getElementById('modalSearch').value.toLowerCase();
+            const summaryMap = getSummaryMap();
+            tbody.innerHTML = '';
+
+            for (const key in summaryMap) {
+                const s = summaryMap[key];
+                const [team, collab, num, name] = key.split('|');
+                let availableQty = 0;
+
+                if (curMode === '공정') availableQty = s.in - s.proc; // 재단할 수 있는 원단 잔량
+                else if (curMode === '출고') availableQty = s.proc - s.out; // 출고할 수 있는 재단 잔량
+
+                if (availableQty <= 0) continue;
+                if (!team.toLowerCase().includes(search) && !name.toLowerCase().includes(search)) continue;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3"><b>${team}</b><br><span class="text-gray-500">${collab} | ${name}</span></td>
+                    <td class="p-3 text-right text-yellow-500 font-bold">${availableQty}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="selectToForm('${team}','${collab}','${num}','${name}',${availableQty})" class="bg-blue-600 px-3 py-1 rounded">선택</button>
+                    </td>`;
+                tbody.appendChild(tr);
+            }
+        }
+
+        function selectToForm(t, c, n, nm, q) {
+            const tSel = document.getElementById('teamSelect');
+            tSel.value = [...tSel.options].some(o => o.value === t) ? t : 'direct';
+            updateCollabOptions();
+            if(tSel.value === 'direct') { 
+                document.getElementById('manualTeam').value = t; 
+                document.getElementById('manualCollab').value = c; 
+            } else { 
+                document.getElementById('collabSelect').value = c; 
+            }
+            document.getElementById('pNum').value = n;
+            document.getElementById('pName').value = nm;
+            document.getElementById('qty').value = q;
+            closeImportModal();
+        }
+
+        // 기본 UI 지원 함수들
+        function openImportModal() { document.getElementById('importModal').classList.remove('hidden'); renderModalList(); }
+        function closeImportModal() { document.getElementById('importModal').classList.add('hidden'); }
 
         function updateFormOptions() {
             const tSel = document.getElementById('teamSelect');
             tSel.innerHTML = '<option value="">-- 구단 선택 --</option>';
             db.teams.forEach(t => tSel.innerHTML += `<option value="${t}">${t}</option>`);
-            tSel.innerHTML += '<option value="direct">➕ 직접 입력</option>';
+            if(curMode === '입고') tSel.innerHTML += '<option value="direct">➕ 직접 입력</option>';
             updateCollabOptions();
         }
 
@@ -186,94 +350,31 @@
             } else {
                 cSel.classList.remove('hidden'); mTeam.classList.add('hidden'); mCollab.classList.add('hidden');
                 cSel.innerHTML = '<option value="">-- 콜라보 선택 --</option>';
-                db.collabs.forEach(c => cSel.innerHTML += `<option value="${c}">${c}</option>`);
-                cSel.innerHTML += '<option value="direct">➕ 직접 입력</option>';
+                if (tVal !== "") {
+                    db.collabs.forEach(c => cSel.innerHTML += `<option value="${c}">${c}</option>`);
+                    if(curMode === '입고') cSel.innerHTML += '<option value="direct">➕ 직접 입력</option>';
+                }
             }
-        }
-
-        function renderTable() {
-            const tbody = document.getElementById('dataTable');
-            const search = document.getElementById('searchBar').value.toLowerCase();
-            let summary = {};
-
-            // 핵심 로직: 단계별 수량 계산
-            if (curMode === "입고") {
-                // 입고 잔여 = 입고량 - 재단량
-                db.inbound.forEach(i => {
-                    const key = `${i.team}|${i.collab}|${i.num}|${i.name}`;
-                    if(!summary[key]) summary[key] = { ...i, rem: 0 };
-                    summary[key].rem += Number(i.qty);
-                });
-                db.process.forEach(i => {
-                    const key = `${i.team}|${i.collab}|${i.num}|${i.name}`;
-                    if(summary[key]) summary[key].rem -= Number(i.qty);
-                });
-            } else if (curMode === "공정") {
-                // 재단 잔여 = 재단량 - 출고량
-                db.process.forEach(i => {
-                    const key = `${i.team}|${i.collab}|${i.num}|${i.name}`;
-                    if(!summary[key]) summary[key] = { ...i, rem: 0 };
-                    summary[key].rem += Number(i.qty);
-                });
-                db.outbound.forEach(i => {
-                    const key = `${i.team}|${i.collab}|${i.num}|${i.name}`;
-                    if(summary[key]) summary[key].rem -= Number(i.qty);
-                });
-            } else {
-                // 출고 완료 리스트
-                db.outbound.forEach(i => {
-                    const key = `${i.team}|${i.collab}|${i.num}|${i.name}`;
-                    if(!summary[key]) summary[key] = { ...i, rem: 0 };
-                    summary[key].rem += Number(i.qty);
-                });
-            }
-
-            const filtered = Object.values(summary).filter(i => 
-                (i.rem > 0 || curMode === '출고') && 
-                (i.team.toLowerCase().includes(search) || i.name.toLowerCase().includes(search))
-            );
-
-            const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
-            const start = (currentPage - 1) * itemsPerPage;
-            const paged = filtered.slice(start, start + itemsPerPage);
-
-            document.getElementById('pageInfo').innerText = `${currentPage} / ${totalPages}`;
-            document.getElementById('prevBtn').disabled = currentPage === 1;
-            document.getElementById('nextBtn').disabled = currentPage === totalPages;
-
-            tbody.innerHTML = '';
-            paged.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.className = "row-link";
-                tr.onclick = () => fillForm(item.team, item.collab, item.num, item.name, item.rem);
-                tr.innerHTML = `
-                    <td class="p-4">
-                        <span class="text-blue-400 font-bold">${item.team}</span> <span class="text-gray-500">${item.collab}</span><br>
-                        <span class="text-gray-300 font-mono">[${item.num}]</span> ${item.name}
-                    </td>
-                    <td class="p-4 text-right font-bold text-yellow-500">${item.rem}</td>`;
-                tbody.appendChild(tr);
-            });
         }
 
         function fillForm(t, c, n, nm, q) {
+            // 잔여량 클릭 시 해당 정보 자동 입력
             const tSel = document.getElementById('teamSelect');
-            if([...tSel.options].some(o => o.value === t)) { tSel.value = t; } 
-            else { tSel.value = 'direct'; document.getElementById('manualTeam').value = t; }
+            tSel.value = [...tSel.options].some(o => o.value === t) ? t : 'direct';
             updateCollabOptions();
-            
-            const cSel = document.getElementById('collabSelect');
-            if([...cSel.options].some(o => o.value === c)) { cSel.value = c; }
-            else { cSel.value = 'direct'; document.getElementById('manualCollab').value = c; }
-            
+            if(tSel.value === 'direct') { document.getElementById('manualTeam').value = t; document.getElementById('manualCollab').value = c; }
+            else { document.getElementById('collabSelect').value = c; }
             document.getElementById('pNum').value = n;
             document.getElementById('pName').value = nm;
             document.getElementById('qty').value = q;
-            window.scrollTo({top: 0, behavior: 'smooth'});
+            window.scrollTo({top:0, behavior:'smooth'});
         }
 
         function resetForm() {
             document.getElementById('mainForm').reset();
+            document.getElementById('editIdx').value = "";
+            document.getElementById('editIndicator').classList.add('hidden');
+            document.getElementById('submitBtn').innerText = "데이터 기록 저장하기";
             updateFormOptions();
         }
 
