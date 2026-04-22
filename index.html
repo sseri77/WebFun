@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marking-Kit Pro - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #1a1c1e; color: #e2e2e2; }
+        .nav-card { background-color: #2a2d31; transition: 0.3s; border: 1px solid #3f444c; }
+        .nav-card:hover { transform: translateY(-5px); border-color: #2563eb; }
+    </style>
+</head>
+<body class="p-6 md:p-12">
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-12 text-center">
+            <h1 class="text-3xl font-black text-blue-400 tracking-tighter uppercase">Marking-Kit Pro Ops</h1>
+            <p class="text-gray-500 text-sm mt-2 font-mono">Integrated Inventory Management System v18.0</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div class="nav-card p-6 rounded-2xl text-center border-t-4 border-blue-500">
+                <h3 class="text-xs text-gray-400 font-bold uppercase">미재단 원단</h3>
+                <p id="totalIn" class="text-3xl font-black mt-2">0</p>
+            </div>
+            <div class="nav-card p-6 rounded-2xl text-center border-t-4 border-yellow-500">
+                <h3 class="text-xs text-gray-400 font-bold uppercase">가용 재고</h3>
+                <p id="totalProc" class="text-3xl font-black text-yellow-400 mt-2">0</p>
+            </div>
+            <div class="nav-card p-6 rounded-2xl text-center border-t-4 border-green-500">
+                <h3 class="text-xs text-gray-400 font-bold uppercase">누적 출고</h3>
+                <p id="totalOut" class="text-3xl font-black text-green-400 mt-2">0</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="inbound.html" class="nav-card p-8 rounded-2xl text-center group">
+                <div class="text-4xl mb-4 group-hover:scale-110 transition-transform">📥</div>
+                <div class="font-bold text-blue-400">입고 관리</div>
+                <div class="text-[10px] text-gray-500 mt-1">원단 입고 및 신규 등록</div>
+            </a>
+            <a href="process.html" class="nav-card p-8 rounded-2xl text-center group">
+                <div class="text-4xl mb-4 group-hover:scale-110 transition-transform">✂️</div>
+                <div class="font-bold text-yellow-500">재단(공정) 관리</div>
+                <div class="text-[10px] text-gray-500 mt-1">원단 재단 및 수량 차감</div>
+            </a>
+            <a href="outbound.html" class="nav-card p-8 rounded-2xl text-center group">
+                <div class="text-4xl mb-4 group-hover:scale-110 transition-transform">🚚</div>
+                <div class="font-bold text-green-500">출고 관리</div>
+                <div class="text-[10px] text-gray-500 mt-1">최종 출고 및 배송 기록</div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "여기에_GAS_배포_URL";
+        async function loadDashboard() {
+            try {
+                const res = await fetch(API_URL);
+                const db = await res.json();
+                let inTotal = 0, procTotal = 0, outTotal = 0;
+                db.inbound.forEach(i => inTotal += Number(i.qty));
+                db.process.forEach(i => procTotal += Number(i.qty));
+                db.outbound.forEach(i => outTotal += Number(i.qty));
+
+                document.getElementById('totalIn').innerText = (inTotal - procTotal).toLocaleString();
+                document.getElementById('totalProc').innerText = (procTotal - outTotal).toLocaleString();
+                document.getElementById('totalOut').innerText = outTotal.toLocaleString();
+            } catch (e) { console.error("데이터 로드 실패"); }
+        }
+        window.onload = loadDashboard;
+    </script>
+</body>
+</html>
