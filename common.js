@@ -60,10 +60,10 @@ function injectNavbar(activePage) {
         <header class="mb-6 flex justify-between items-center border-b border-gray-700 pb-4">
             <h1 class="text-xl font-black text-blue-400 font-mono tracking-tighter">MARKING-KIT OPS</h1>
             <div class="flex gap-4 text-[11px] font-bold uppercase">
-                <a href="index.html" class="${activePage==='index'?'text-white':'text-gray-500'}">Dash</a>
-                <a href="inbound.html" class="${activePage==='inbound'?'text-blue-400':'text-gray-500'}">In</a>
-                <a href="process.html" class="${activePage==='process'?'text-yellow-500':'text-gray-500'}">Proc</a>
-                <a href="outbound.html" class="${activePage==='outbound'?'text-red-500':'text-gray-500'}">Out</a>
+                <a href="index.html" class="${activePage==='index'?'text-white':'text-gray-500'}">메인</a>
+                <a href="inbound.html" class="${activePage==='inbound'?'text-blue-400':'text-gray-500'}">입고</a>
+                <a href="process.html" class="${activePage==='process'?'text-yellow-500':'text-gray-500'}">재단</a>
+                <a href="outbound.html" class="${activePage==='outbound'?'text-red-500':'text-gray-500'}">출고</a>
             </div>
         </header>
     `;
