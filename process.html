@@ -2,39 +2,249 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>재단 관리 - Process</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Process Management - Marking-Kit Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #1a1c1e; color: #e2e2e2; }
+        body { background-color: #1a1c1e; color: #e2e2e2; font-family: sans-serif; }
         .card { background-color: #2a2d31; border: 1px solid #3f444c; border-radius: 12px; }
-        .input-field { background-color: #1a1c1e; border: 1px solid #4b5563; color: white; border-radius: 8px; padding: 10px; }
+        .input-field { background-color: #1a1c1e; border: 1px solid #4b5563; color: white; border-radius: 8px; padding: 10px; font-size: 14px; }
+        .row-link:hover { background-color: #363b42; cursor: pointer; }
+        .modal { background-color: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
+        input:read-only { background-color: #2a2d31; color: #9ca3af; cursor: not-allowed; }
     </style>
 </head>
 <body class="p-4 md:p-8">
-    <div class="max-w-5xl mx-auto">
-        <nav class="mb-6 flex justify-between items-center">
-            <a href="index.html" class="text-gray-400 hover:text-white text-sm">← 대시보드로 돌아가기</a>
-            <h1 class="text-xl font-bold text-yellow-500">✂️ 재단 관리</h1>
-        </nav>
+    <script src="common.js"></script>
 
-        <section class="card p-6 mb-8 border-l-8 border-yellow-500">
-            <div class="mb-4">
-                <button onclick="openModal()" class="w-full py-2 bg-gray-700 rounded-lg text-xs font-bold text-blue-400 border border-dashed border-blue-500">📦 입고 잔량에서 불러오기</button>
+    <div id="content-area" class="max-w-5xl mx-auto">
+        <section class="card p-6 shadow-2xl mb-8 border-l-8 border-yellow-500 transition-all">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-sm font-black text-yellow-500 uppercase tracking-widest">Process Registration</h2>
+                <div id="editIndicator" class="hidden flex items-center gap-2 bg-blue-900/50 px-3 py-1 rounded-full border border-blue-500">
+                    <span class="text-[10px] font-bold text-blue-200 uppercase tracking-widest">Edit Mode</span>
+                </div>
             </div>
-            <form id="procForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <input type="hidden" id="editIdx">
-                <input type="text" id="team" class="input-field" placeholder="구단명" readonly>
-                <input type="text" id="collab" class="input-field" placeholder="콜라보명" readonly>
-                <input type="text" id="pNum" class="input-field" placeholder="배번" readonly>
-                <input type="text" id="pName" class="input-field" placeholder="선수이름" readonly>
-                <input type="number" id="qty" class="input-field font-bold text-yellow-400" placeholder="재단 수량" required>
-                <button type="submit" id="submitBtn" class="md:col-span-3 bg-yellow-600 py-3 rounded-xl font-bold">재단 기록 저장</button>
+
+            <div class="mb-4">
+                <button onclick="openModal()" class="w-full py-3 bg-gray-700 hover:bg-gray-600 rounded-xl text-xs font-bold text-yellow-500 border border-dashed border-yellow-500/50 transition-all">
+                    📦 입고 잔량 리스트에서 불러오기
+                </button>
+            </div>
+
+            <form id="procForm" class="space-y-6">
+                <input type="hidden" id="editIdx" value="">
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">Team</label>
+                        <input type="text" id="team" class="input-field" placeholder="구단명" readonly>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">Collab</label>
+                        <input type="text" id="collab" class="input-field" placeholder="콜라보" readonly>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">No.</label>
+                        <input type="text" id="pNum" class="input-field text-center font-bold" placeholder="00" readonly>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">Player</label>
+                        <input type="text" id="pName" class="input-field" placeholder="선수이름" readonly>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-2">
+                    <label class="text-[10px] text-yellow-500 font-bold ml-1 uppercase">Cutting Quantity (재단 수량)</label>
+                    <input type="number" id="qty" class="input-field font-bold text-yellow-400 text-lg" placeholder="0" required>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <button type="submit" id="submitBtn" class="w-full bg-yellow-600 hover:bg-yellow-500 py-4 rounded-xl font-black text-white shadow-lg transition-all active:scale-95">재단 데이터 저장하기</button>
+                    <button type="button" onclick="resetForm()" class="w-full bg-gray-700 hover:bg-gray-600 py-4 rounded-xl font-bold text-gray-300 shadow-lg transition-all active:scale-95">입력창 초기화</button>
+                </div>
             </form>
         </section>
 
+        <section class="card overflow-hidden">
+            <div class="p-4 bg-[#32363c] flex justify-between items-center border-b border-gray-700">
+                <span class="text-xs font-bold text-yellow-500 uppercase tracking-widest">최근 재단 완료 내역</span>
+                <input type="text" id="searchBar" oninput="renderProcTable()" class="input-field w-48 md:w-64 text-xs py-1" placeholder="검색...">
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead>
+                        <tr class="bg-[#1a1c1e] text-gray-500 border-b border-gray-800 font-bold">
+                            <th class="p-4">재단 품목</th>
+                            <th class="p-4 text-right">재단 수량</th>
+                            <th class="p-4 text-center">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="procTable" class="divide-y divide-gray-800"></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <div id="stockModal" class="modal fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="card w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                <h3 class="font-bold text-yellow-500">입고 잔량 선택</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white">✕</button>
+            </div>
+            <div class="p-4 bg-[#1a1c1e]">
+                <input type="text" id="modalSearch" oninput="renderStockModal()" class="input-field w-full text-sm" placeholder="구단 또는 선수명 검색...">
+            </div>
+            <div class="overflow-y-auto flex-1">
+                <table class="w-full text-left text-xs">
+                    <tbody id="stockTable" class="divide-y divide-gray-800"></tbody>
+                </table>
+            </div>
         </div>
-        <script src="common.js"></script>
-    
-    </body>
+    </div>
+
+    <script>
+        let db = { inbound:[], process:[], outbound:[] };
+
+        async function init() {
+            injectNavbar('process');
+            db = await fetchAllData();
+            if (!db) return alert("데이터를 불러올 수 없습니다.");
+            renderProcTable();
+        }
+
+        // 모달 열기/닫기
+        function openModal() {
+            document.getElementById('stockModal').classList.remove('hidden');
+            renderStockModal();
+        }
+        function closeModal() {
+            document.getElementById('stockModal').classList.add('hidden');
+        }
+
+        // 모달 내 입고 잔량 렌더링 (common.js의 getInventorySummary 사용)
+        function renderStockModal() {
+            const tbody = document.getElementById('stockTable');
+            const search = document.getElementById('modalSearch').value.toLowerCase();
+            const summary = getInventorySummary(db);
+            tbody.innerHTML = '';
+
+            for (const key in summary) {
+                const s = summary[key];
+                const rem = s.in - s.proc;
+                if (rem <= 0) continue;
+
+                const [t, c, n, nm] = key.split('|');
+                if (!t.toLowerCase().includes(search) && !nm.toLowerCase().includes(search)) continue;
+
+                const tr = document.createElement('tr');
+                tr.className = "row-link";
+                tr.onclick = () => {
+                    selectItem(t, c, n, nm);
+                    closeModal();
+                };
+                tr.innerHTML = `
+                    <td class="p-4">
+                        <span class="text-blue-400 font-bold">${t}</span> <span class="text-[10px] text-gray-500">${c}</span><br>
+                        [${n}] ${nm}
+                    </td>
+                    <td class="p-4 text-right">
+                        <span class="text-yellow-500 font-bold">${rem}</span> <span class="text-gray-500 text-[10px]">남음</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        function selectItem(t, c, n, nm) {
+            document.getElementById('team').value = t;
+            document.getElementById('collab').value = c;
+            document.getElementById('pNum').value = n;
+            document.getElementById('pName').value = nm;
+            document.getElementById('qty').focus();
+        }
+
+        // 재단 내역 리스트 (db.process 기준)
+        function renderProcTable() {
+            const tbody = document.getElementById('procTable');
+            const search = document.getElementById('searchBar').value.toLowerCase();
+            tbody.innerHTML = '';
+
+            db.process.forEach(item => {
+                if (!item.team.toLowerCase().includes(search) && !item.name.toLowerCase().includes(search)) return;
+
+                const tr = document.createElement('tr');
+                tr.className = "row-link";
+                tr.onclick = () => fillForm(item);
+
+                tr.innerHTML = `
+                    <td class="p-4">
+                        <span class="text-yellow-500 font-bold">${item.team}</span> <span class="text-[10px] text-gray-500">${item.collab}</span><br>
+                        <span class="text-gray-300 font-mono">[${item.num}]</span> ${item.name}
+                    </td>
+                    <td class="p-4 text-right font-bold text-yellow-500">${Number(item.qty).toLocaleString()}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="event.stopPropagation(); deleteProc('${item.idx}')" class="text-red-500 border border-red-900/50 px-2 py-1 rounded text-[10px] hover:bg-red-900/20">삭제</button>
+                    </td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function fillForm(item) {
+            document.getElementById('editIdx').value = item.idx;
+            document.getElementById('team').value = item.team;
+            document.getElementById('collab').value = item.collab;
+            document.getElementById('pNum').value = item.num;
+            document.getElementById('pName').value = item.name;
+            document.getElementById('qty').value = item.qty;
+            
+            document.getElementById('editIndicator').classList.remove('hidden');
+            const sBtn = document.getElementById('submitBtn');
+            sBtn.innerText = "데이터 수정하기";
+            sBtn.classList.replace('bg-yellow-600', 'bg-blue-600');
+            window.scrollTo({top:0, behavior:'smooth'});
+        }
+
+        function resetForm() {
+            document.getElementById('procForm').reset();
+            document.getElementById('editIdx').value = "";
+            document.getElementById('editIndicator').classList.add('hidden');
+            const sBtn = document.getElementById('submitBtn');
+            sBtn.innerText = "재단 데이터 저장하기";
+            sBtn.classList.replace('bg-blue-600', 'bg-yellow-600');
+        }
+
+        document.getElementById('procForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            const editIdx = document.getElementById('editIdx').value;
+            
+            const payload = {
+                method: editIdx ? 'UPDATE' : 'INSERT',
+                idx: editIdx,
+                action: '재단',
+                team: document.getElementById('team').value,
+                collab: document.getElementById('collab').value,
+                num: document.getElementById('pNum').value,
+                name: document.getElementById('pName').value,
+                qty: document.getElementById('qty').value
+            };
+
+            if(!payload.team || !payload.qty) return alert("항목을 선택하고 수량을 입력해주세요.");
+
+            btn.disabled = true; btn.innerText = "처리 중...";
+            await sendData(payload);
+            location.reload();
+        });
+
+        async function deleteProc(idx) {
+            if(confirm("재단 기록을 삭제하시겠습니까?")) {
+                await sendData({method:'DELETE', action:'재단', idx:idx});
+                location.reload();
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
 </html>
