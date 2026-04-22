@@ -44,7 +44,7 @@ function getInventorySummary(db) {
 /**
  * 데이터 전송 공통 함수 (INSERT, UPDATE, DELETE)
  */
-aasync function sendData(payload) {
+async function sendData(payload) {
     // no-cors를 제거해야 GAS에서 데이터를 안정적으로 파싱합니다.
     return fetch(API_URL, {
         method: 'POST',
