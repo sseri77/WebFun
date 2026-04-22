@@ -2,188 +2,234 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>출고 관리 - Outbound</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Outbound Management - Marking-Kit Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #1a1c1e; color: #e2e2e2; font-family: sans-serif; }
         .card { background-color: #2a2d31; border: 1px solid #3f444c; border-radius: 12px; }
         .input-field { background-color: #1a1c1e; border: 1px solid #4b5563; color: white; border-radius: 8px; padding: 10px; font-size: 14px; }
         .row-link:hover { background-color: #363b42; cursor: pointer; }
-        .modal { background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); }
+        .modal { background-color: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
+        input:read-only { background-color: #2a2d31; color: #9ca3af; cursor: not-allowed; }
     </style>
 </head>
 <body class="p-4 md:p-8">
-    <div class="max-w-5xl mx-auto">
-        <nav class="mb-6 flex justify-between items-center">
-            <a href="index.html" class="text-gray-400 hover:text-white text-sm flex items-center gap-2">
-                <span class="text-lg">←</span> 대시보드
-            </a>
-            <h1 class="text-xl font-bold text-red-500 uppercase tracking-tighter">🚚 Outbound Ops</h1>
-        </nav>
+    <script src="common.js"></script>
 
-        <section class="card p-6 mb-8 border-l-8 border-red-600 shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xs font-black text-red-500 uppercase tracking-widest">출고 데이터 기록</h2>
-                <button onclick="openModal()" class="px-4 py-2 bg-red-900/30 border border-red-500/50 rounded-lg text-xs font-bold text-red-200 hover:bg-red-900/50 transition-all">
-                    📦 재단 잔량 불러오기
+    <div id="content-area" class="max-w-5xl mx-auto">
+        <section class="card p-6 shadow-2xl mb-8 border-l-8 border-red-600 transition-all">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-sm font-black text-red-500 uppercase tracking-widest">Outbound Registration</h2>
+                <div id="editIndicator" class="hidden flex items-center gap-2 bg-blue-900/50 px-3 py-1 rounded-full border border-blue-500">
+                    <span class="text-[10px] font-bold text-blue-200 uppercase tracking-widest">Edit Mode</span>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <button onclick="openModal()" class="w-full py-3 bg-gray-700 hover:bg-gray-600 rounded-xl text-xs font-bold text-red-500 border border-dashed border-red-500/50 transition-all">
+                    ✂️ 재단 완료 리스트에서 불러오기
                 </button>
             </div>
 
-            <form id="outboundForm" class="space-y-4">
-                <input type="hidden" id="editIdx">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <input type="text" id="team" class="input-field opacity-60" placeholder="구단명" readonly>
-                    <input type="text" id="collab" class="input-field opacity-60" placeholder="콜라보명" readonly>
-                    <input type="text" id="pNum" class="input-field opacity-60" placeholder="배번" readonly>
-                    <input type="text" id="pName" class="input-field opacity-60" placeholder="선수이름" readonly>
+            <form id="outboundForm" class="space-y-6">
+                <input type="hidden" id="editIdx" value="">
+                
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">Team</label>
+                        <input type="text" id="team" class="input-field" placeholder="구단명" readonly>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">Collab</label>
+                        <input type="text" id="collab" class="input-field" placeholder="콜라보" readonly>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">No.</label>
+                        <input type="text" id="pNum" class="input-field text-center font-bold" placeholder="00" readonly>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">Player</label>
+                        <input type="text" id="pName" class="input-field" placeholder="선수이름" readonly>
+                    </div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="flex flex-col gap-1">
-                        <label class="text-[10px] text-gray-500 font-bold ml-1 uppercase">출고 수량</label>
-                        <input type="number" id="qty" class="input-field text-xl font-black text-red-500" placeholder="0" required>
-                    </div>
-                    <div class="flex items-end">
-                        <button type="submit" id="submitBtn" class="w-full bg-red-600 hover:bg-red-500 py-3.5 rounded-xl font-black text-white shadow-lg transition-all active:scale-95">
-                            최종 출고 저장하기
-                        </button>
-                    </div>
+
+                <div class="flex flex-col gap-2">
+                    <label class="text-[10px] text-red-500 font-bold ml-1 uppercase">Shipment Quantity (출고 수량)</label>
+                    <input type="number" id="qty" class="input-field font-bold text-red-500 text-lg" placeholder="0" required>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <button type="submit" id="submitBtn" class="w-full bg-red-600 hover:bg-red-500 py-4 rounded-xl font-black text-white shadow-lg transition-all active:scale-95">최종 출고 저장하기</button>
+                    <button type="button" onclick="resetForm()" class="w-full bg-gray-700 hover:bg-gray-600 py-4 rounded-xl font-bold text-gray-300 shadow-lg transition-all active:scale-95">입력창 초기화</button>
                 </div>
             </form>
         </section>
 
         <section class="card overflow-hidden">
             <div class="p-4 bg-[#32363c] flex justify-between items-center border-b border-gray-700">
-                <span class="text-xs font-bold text-red-400 uppercase tracking-widest">누적 출고 완료 내역</span>
-                <input type="text" id="searchBar" oninput="renderTable()" class="input-field w-48 text-xs py-1" placeholder="검색...">
+                <span class="text-xs font-bold text-red-400 uppercase tracking-widest">최근 출고 완료 내역</span>
+                <input type="text" id="searchBar" oninput="renderOutboundTable()" class="input-field w-48 md:w-64 text-xs py-1" placeholder="검색...">
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs">
                     <thead>
                         <tr class="bg-[#1a1c1e] text-gray-500 border-b border-gray-800 font-bold">
-                            <th class="p-4">출고 정보</th>
+                            <th class="p-4">출고 품목</th>
                             <th class="p-4 text-right">출고 수량</th>
-                            <th class="p-4 text-center">동작</th>
+                            <th class="p-4 text-center">관리</th>
                         </tr>
                     </thead>
-                    <tbody id="dataTable" class="divide-y divide-gray-800">
-                        </tbody>
+                    <tbody id="outboundTable" class="divide-y divide-gray-800"></tbody>
                 </table>
             </div>
         </section>
     </div>
 
-    <div id="importModal" class="modal fixed inset-0 hidden z-50 flex items-center justify-center p-4">
-        <div class="card w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden shadow-2xl border border-gray-600">
-            <div class="p-4 border-b border-gray-700 flex justify-between items-center bg-[#2a2d31]">
-                <h3 class="font-bold text-sm text-red-400 font-mono">SELECT AVAILABLE STOCK (READY)</h3>
-                <button onclick="closeModal()" class="text-gray-400 hover:text-white text-xl">✕</button>
+    <div id="stockModal" class="modal fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="card w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                <h3 class="font-bold text-red-500 uppercase font-mono text-sm">Select Ready-to-Ship Items</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-white">✕</button>
             </div>
-            <div class="overflow-y-auto flex-1 bg-[#1a1c1e]">
-                <table class="w-full text-xs text-left">
+            <div class="p-4 bg-[#1a1c1e]">
+                <input type="text" id="modalSearch" oninput="renderStockModal()" class="input-field w-full text-sm" placeholder="검색...">
+            </div>
+            <div class="overflow-y-auto flex-1">
+                <table class="w-full text-left text-xs">
                     <thead class="bg-[#2a2d31] sticky top-0">
-                        <tr class="text-gray-500 border-b border-gray-800 font-bold uppercase">
+                        <tr class="text-gray-500 border-b border-gray-800">
                             <th class="p-3">항목</th>
-                            <th class="p-3 text-right text-yellow-500">재단 잔량</th>
+                            <th class="p-3 text-right">재단 잔량</th>
                             <th class="p-3 text-center">선택</th>
                         </tr>
                     </thead>
-                    <tbody id="modalTableBody" class="divide-y divide-gray-900"></tbody>
+                    <tbody id="stockTable" class="divide-y divide-gray-800"></tbody>
                 </table>
             </div>
         </div>
     </div>
 
-    <script src="common.js"></script>
     <script>
-        let db = { process:[], outbound:[] };
+        let db = { inbound:[], process:[], outbound:[] };
 
         async function init() {
-            try {
-                const res = await fetch(API_URL);
-                const data = await res.json();
-                db.process = data.process;
-                db.outbound = data.outbound;
-                renderTable();
-            } catch (e) { alert("데이터 로드 오류"); }
+            injectNavbar('outbound');
+            db = await fetchAllData();
+            if (!db) return alert("데이터를 불러올 수 없습니다.");
+            renderOutboundTable();
         }
 
-        // 출고 잔량 계산 로직 (재단 수량 - 출고 수량)
-        function getSummary() {
-            const summary = {};
-            const key = (i) => `${i.team}|${i.collab}|${i.num}|${i.name}`;
-            
-            db.process.forEach(i => {
-                const k = key(i);
-                if(!summary[k]) summary[k] = { proc:0, out:0 };
-                summary[k].proc += Number(i.qty);
-            });
-            db.outbound.forEach(i => {
-                const k = key(i);
-                if(summary[k]) summary[k].out += Number(i.qty);
-            });
-            return summary;
-        }
-
-        function renderTable() {
-            const tbody = document.getElementById('dataTable');
-            const search = document.getElementById('searchBar').value.toLowerCase();
-            tbody.innerHTML = '';
-
-            // 출고 내역은 원본 그대로 보여줌 (누적 기록이므로)
-            db.outbound.reverse().forEach(i => {
-                if(!i.team.toLowerCase().includes(search) && !i.name.toLowerCase().includes(search)) return;
-                tbody.innerHTML += `
-                    <tr class="hover:bg-[#363b42]">
-                        <td class="p-4"><b>${i.team}</b> ${i.collab}<br><span class="text-gray-500">[${i.num}] ${i.name}</span></td>
-                        <td class="p-4 text-right font-black text-red-500">${Number(i.qty).toLocaleString()}</td>
-                        <td class="p-4 text-center">
-                            <button onclick="deleteRow('${i.idx}')" class="text-[10px] text-gray-600 hover:text-red-500 uppercase font-bold">Delete</button>
-                        </td>
-                    </tr>`;
-            });
-        }
-
-        // 모달 열기 (재단 잔량이 있는 선수만 표시)
         function openModal() {
-            const tbody = document.getElementById('modalTableBody');
-            const summary = getSummary();
-            tbody.innerHTML = '';
-            
-            for(const k in summary) {
-                const s = summary[k];
-                const available = s.proc - s.out;
-                if(available <= 0) continue;
-
-                const [t,c,n,nm] = k.split('|');
-                tbody.innerHTML += `
-                    <tr class="border-b border-gray-900">
-                        <td class="p-3"><b>${t}</b><br><span class="text-[10px] text-gray-500">${c} | ${nm}</span></td>
-                        <td class="p-3 text-right font-bold text-yellow-500">${available}</td>
-                        <td class="p-3 text-center">
-                            <button onclick="selectItem('${t}','${c}','${n}','${nm}',${available})" class="bg-red-600 px-3 py-1 rounded text-[10px] font-bold">PICK</button>
-                        </td>
-                    </tr>`;
-            }
-            document.getElementById('importModal').classList.remove('hidden');
+            document.getElementById('stockModal').classList.remove('hidden');
+            renderStockModal();
+        }
+        function closeModal() {
+            document.getElementById('stockModal').classList.add('hidden');
         }
 
-        function closeModal() { document.getElementById('importModal').classList.add('hidden'); }
+        // 재단 잔량(Process - Outbound) 계산 및 렌더링
+        function renderStockModal() {
+            const tbody = document.getElementById('stockTable');
+            const search = document.getElementById('modalSearch').value.toLowerCase();
+            const summary = getInventorySummary(db);
+            tbody.innerHTML = '';
 
-        function selectItem(t,c,n,nm,q) {
+            for (const key in summary) {
+                const s = summary[key];
+                const available = s.proc - s.out; // 재단량 - 출고량 = 출고 대기 잔량
+                if (available <= 0) continue;
+
+                const [t, c, n, nm] = key.split('|');
+                if (!t.toLowerCase().includes(search) && !nm.toLowerCase().includes(search)) continue;
+
+                const tr = document.createElement('tr');
+                tr.className = "row-link";
+                tr.innerHTML = `
+                    <td class="p-4">
+                        <span class="text-yellow-500 font-bold">${t}</span> <span class="text-[10px] text-gray-500">${c}</span><br>
+                        [${n}] ${nm}
+                    </td>
+                    <td class="p-4 text-right">
+                        <span class="text-white font-bold">${available}</span>
+                    </td>
+                    <td class="p-4 text-center">
+                        <button onclick="selectItem('${t}','${c}','${n}','${nm}',${available})" class="bg-red-600 hover:bg-red-500 px-3 py-1.5 rounded text-[10px] font-bold text-white transition-colors">선택</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            }
+        }
+
+        function selectItem(t, c, n, nm, q) {
             document.getElementById('team').value = t;
             document.getElementById('collab').value = c;
             document.getElementById('pNum').value = n;
             document.getElementById('pName').value = nm;
             document.getElementById('qty').value = q;
             closeModal();
+            document.getElementById('qty').focus();
         }
 
-        document.getElementById('outboundForm').onsubmit = async (e) => {
+        // 출고 완료 내역 렌더링
+        function renderOutboundTable() {
+            const tbody = document.getElementById('outboundTable');
+            const search = document.getElementById('searchBar').value.toLowerCase();
+            tbody.innerHTML = '';
+
+            // 최신순으로 정렬하여 표시
+            [...db.outbound].reverse().forEach(item => {
+                if (!item.team.toLowerCase().includes(search) && !item.name.toLowerCase().includes(search)) return;
+
+                const tr = document.createElement('tr');
+                tr.className = "row-link";
+                tr.onclick = () => fillForm(item);
+
+                tr.innerHTML = `
+                    <td class="p-4">
+                        <span class="text-red-500 font-bold">${item.team}</span> <span class="text-[10px] text-gray-500">${item.collab}</span><br>
+                        <span class="text-gray-300 font-mono">[${item.num}]</span> ${item.name}
+                    </td>
+                    <td class="p-4 text-right font-black text-red-500">${Number(item.qty).toLocaleString()}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="event.stopPropagation(); deleteOutbound('${item.idx}')" class="text-gray-500 border border-gray-700 px-2 py-1 rounded text-[10px] hover:text-red-500 hover:border-red-900 transition-all">삭제</button>
+                    </td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function fillForm(item) {
+            document.getElementById('editIdx').value = item.idx;
+            document.getElementById('team').value = item.team;
+            document.getElementById('collab').value = item.collab;
+            document.getElementById('pNum').value = item.num;
+            document.getElementById('pName').value = item.name;
+            document.getElementById('qty').value = item.qty;
+            
+            document.getElementById('editIndicator').classList.remove('hidden');
+            const sBtn = document.getElementById('submitBtn');
+            sBtn.innerText = "출고 데이터 수정";
+            sBtn.classList.replace('bg-red-600', 'bg-blue-600');
+            window.scrollTo({top:0, behavior:'smooth'});
+        }
+
+        function resetForm() {
+            document.getElementById('outboundForm').reset();
+            document.getElementById('editIdx').value = "";
+            document.getElementById('editIndicator').classList.add('hidden');
+            const sBtn = document.getElementById('submitBtn');
+            sBtn.innerText = "최종 출고 저장하기";
+            sBtn.classList.replace('bg-blue-600', 'bg-red-600');
+        }
+
+        document.getElementById('outboundForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
+            const editIdx = document.getElementById('editIdx').value;
+            
             const payload = {
-                method: 'INSERT',
+                method: editIdx ? 'UPDATE' : 'INSERT',
+                idx: editIdx,
                 action: '출고',
                 team: document.getElementById('team').value,
                 collab: document.getElementById('collab').value,
@@ -191,18 +237,18 @@
                 name: document.getElementById('pName').value,
                 qty: document.getElementById('qty').value
             };
-            
-            if(!payload.team) { alert("항목을 먼저 선택해주세요."); return; }
-            
-            btn.disabled = true; btn.innerText = "저장 중...";
-            await fetch(API_URL, { method:'POST', mode:'no-cors', body:JSON.stringify(payload) });
-            location.reload();
-        };
 
-        function deleteRow(idx) {
+            if(!payload.team || !payload.qty) return alert("출고할 항목을 선택해주세요.");
+
+            btn.disabled = true; btn.innerText = "처리 중...";
+            await sendData(payload);
+            location.reload();
+        });
+
+        async function deleteOutbound(idx) {
             if(confirm("출고 기록을 삭제하시겠습니까?")) {
-                fetch(API_URL, { method:'POST', mode:'no-cors', body:JSON.stringify({method:'DELETE', action:'출고', idx:idx}) })
-                .then(() => location.reload());
+                await sendData({method:'DELETE', action:'출고', idx:idx});
+                location.reload();
             }
         }
 
