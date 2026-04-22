@@ -87,21 +87,14 @@
         let db = { inbound:[], process:[], outbound:[], teams:[], collabs:[] };
 
         async function init() {
-            // 1. 네비게이션 주입
             injectNavbar('inbound');
-            
-            // 2. 데이터 로드
             db = await fetchAllData();
             if (!db) return alert("데이터를 불러올 수 없습니다.");
-
-            // 3. 셀렉트 박스 옵션 설정
+        
             updateFormOptions();
-            
-            // 4. 테이블 렌더링
             renderTable();
         }
-
-        // 셀렉트 박스 옵션 생성 (18.0 UI 로직)
+        
         function updateFormOptions() {
             const tSel = document.getElementById('teamSelect');
             tSel.innerHTML = '<option value="">-- 구단 선택 --</option>';
@@ -109,17 +102,21 @@
             tSel.innerHTML += '<option value="direct">➕ 직접 입력</option>';
             updateCollabOptions();
         }
-
+        
         function updateCollabOptions() {
             const tVal = document.getElementById('teamSelect').value;
             const cSel = document.getElementById('collabSelect');
             const mTeam = document.getElementById('manualTeam');
             const mCollab = document.getElementById('manualCollab');
-
+        
             if (tVal === 'direct') {
-                cSel.classList.add('hidden'); mTeam.classList.remove('hidden'); mCollab.classList.remove('hidden');
+                cSel.classList.add('hidden'); 
+                mTeam.classList.remove('hidden'); 
+                mCollab.classList.remove('hidden');
             } else {
-                cSel.classList.remove('hidden'); mTeam.classList.add('hidden'); mCollab.classList.add('hidden');
+                cSel.classList.remove('hidden'); 
+                mTeam.classList.add('hidden'); 
+                mCollab.classList.add('hidden');
                 cSel.innerHTML = '<option value="">-- 콜라보 선택 --</option>';
                 if (tVal !== "") {
                     db.collabs.forEach(c => cSel.innerHTML += `<option value="${c}">${c}</option>`);
@@ -127,49 +124,52 @@
                 }
             }
         }
-
-        // 입고 잔량 리스트 렌더링
+        
+        // 리스트 렌더링 로직 수정: 입고 내역 전체를 보여줌
         function renderTable() {
             const tbody = document.getElementById('dataTable');
             const search = document.getElementById('searchBar').value.toLowerCase();
-            const summaryMap = getInventorySummary(db); // common.js 함수 사용
+            const summaryMap = getInventorySummary(db); // 잔량 참고용
             tbody.innerHTML = '';
-
-            for (const key in summaryMap) {
-                const s = summaryMap[key];
-                const [team, collab, num, name] = key.split('|');
-                const rem = s.in - s.proc; // 입고량 - 재단량 = 미재단 잔량
-
-                if (rem <= 0) continue;
-                if (!team.toLowerCase().includes(search) && !name.toLowerCase().includes(search)) continue;
-
+        
+            // db.inbound 배열을 직접 순회 (그래야 모든 입고 건이 보임)
+            db.inbound.forEach(item => {
+                if (!item.team.toLowerCase().includes(search) && !item.name.toLowerCase().includes(search)) return;
+        
+                const key = `${item.team}|${item.collab}|${item.num}|${item.name}`;
+                const s = summaryMap[key] || { in:0, proc:0 };
+                const rem = s.in - s.proc; // 전체 재고 상황
+        
                 const tr = document.createElement('tr');
                 tr.className = "row-link";
-                tr.onclick = () => fillForm(team, collab, num, name, rem, s.lastIdx);
-
+                // 수정 시에는 해당 행의 qty(원본 입고량)를 불러와야 함
+                tr.onclick = () => fillForm(item.team, item.collab, item.num, item.name, item.qty, item.idx);
+        
                 tr.innerHTML = `
                     <td class="p-4">
-                        <span class="text-blue-400 font-bold">${team}</span> <span class="text-[10px] text-gray-500">${collab}</span><br>
-                        <span class="text-gray-300 font-mono">[${num}]</span> ${name}
+                        <span class="text-blue-400 font-bold">${item.team}</span> <span class="text-[10px] text-gray-500">${item.collab}</span><br>
+                        <span class="text-gray-300 font-mono">[${item.num}]</span> ${item.name}
                     </td>
-                    <td class="p-4 text-right font-bold text-blue-400">${rem.toLocaleString()}</td>
+                    <td class="p-4 text-right">
+                        <div class="text-white font-bold">${Number(item.qty).toLocaleString()}</div>
+                        <div class="text-[10px] text-gray-500">잔량: ${rem}</div>
+                    </td>
                     <td class="p-4 text-center">
-                        <button onclick="event.stopPropagation(); deleteInbound('${s.lastIdx}')" class="text-red-500 border border-red-900/50 px-2 py-1 rounded text-[10px]">삭제</button>
+                        <button onclick="event.stopPropagation(); deleteInbound('${item.idx}')" class="text-red-500 border border-red-900/50 px-2 py-1 rounded text-[10px] hover:bg-red-900/20">삭제</button>
                     </td>`;
                 tbody.appendChild(tr);
-            }
+            });
         }
-
+        
         function fillForm(t, c, n, nm, q, idx) {
             document.getElementById('editIdx').value = idx;
             document.getElementById('editIndicator').classList.remove('hidden');
-            document.getElementById('submitBtn').innerText = "데이터 수정하기";
-            document.getElementById('submitBtn').classList.replace('bg-blue-600', 'bg-yellow-600');
-
+            const sBtn = document.getElementById('submitBtn');
+            sBtn.innerText = "데이터 수정하기";
+            sBtn.classList.replace('bg-blue-600', 'bg-yellow-600');
+        
             const tSel = document.getElementById('teamSelect');
-            const isExistTeam = [...tSel.options].some(o => o.value === t);
-            
-            if (isExistTeam) {
+            if ([...tSel.options].some(o => o.value === t)) {
                 tSel.value = t;
             } else {
                 tSel.value = 'direct';
@@ -178,63 +178,69 @@
             
             updateCollabOptions();
             
-            if (tSel.value !== 'direct') {
-                const cSel = document.getElementById('collabSelect');
-                const isExistCollab = [...cSel.options].some(o => o.value === c);
-                if (isExistCollab) cSel.value = c;
-                else {
-                    cSel.value = 'direct';
-                    document.getElementById('manualCollab').value = c;
-                }
+            const cSel = document.getElementById('collabSelect');
+            if (tSel.value !== 'direct' && [...cSel.options].some(o => o.value === c)) {
+                cSel.value = c;
             } else {
+                if(tSel.value !== 'direct') cSel.value = 'direct';
                 document.getElementById('manualCollab').value = c;
             }
-
+        
             document.getElementById('pNum').value = n;
             document.getElementById('pName').value = nm;
             document.getElementById('qty').value = q;
             window.scrollTo({top:0, behavior:'smooth'});
         }
-
+        
         function resetForm() {
             document.getElementById('inboundForm').reset();
             document.getElementById('editIdx').value = "";
             document.getElementById('editIndicator').classList.add('hidden');
-            document.getElementById('submitBtn').innerText = "입고 데이터 저장하기";
-            document.getElementById('submitBtn').classList.remove('bg-yellow-600');
-            document.getElementById('submitBtn').classList.add('bg-blue-600');
+            const sBtn = document.getElementById('submitBtn');
+            sBtn.innerText = "입고 데이터 저장하기";
+            sBtn.classList.replace('bg-yellow-600', 'bg-blue-600');
             updateFormOptions();
         }
-
-        // 저장 로직
+        
         document.getElementById('inboundForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('submitBtn');
             const editIdx = document.getElementById('editIdx').value;
             
+            const teamVal = document.getElementById('teamSelect').value;
+            const collabVal = document.getElementById('collabSelect').value;
+        
             const payload = {
                 method: editIdx ? 'UPDATE' : 'INSERT',
                 idx: editIdx,
                 action: '입고',
-                team: document.getElementById('teamSelect').value === 'direct' ? document.getElementById('manualTeam').value : document.getElementById('teamSelect').value,
-                collab: (document.getElementById('teamSelect').value === 'direct' || document.getElementById('collabSelect').value === 'direct') ? document.getElementById('manualCollab').value : document.getElementById('collabSelect').value,
+                team: teamVal === 'direct' ? document.getElementById('manualTeam').value : teamVal,
+                collab: (teamVal === 'direct' || collabVal === 'direct') ? document.getElementById('manualCollab').value : collabVal,
                 num: document.getElementById('pNum').value,
                 name: document.getElementById('pName').value,
                 qty: document.getElementById('qty').value
             };
-
+        
+            if(!payload.team || !payload.name || !payload.qty) return alert("필수 정보를 입력해주세요.");
+        
             btn.disabled = true; btn.innerText = "처리 중...";
-            await sendData(payload); // common.js 함수 사용
-            location.reload();
+            try {
+                await sendData(payload);
+                alert(editIdx ? "수정되었습니다." : "저장되었습니다.");
+                location.reload();
+            } catch(err) {
+                alert("오류가 발생했습니다.");
+                btn.disabled = false; btn.innerText = "다시 시도";
+            }
         });
-
+        
         async function deleteInbound(idx) {
-            if(confirm("입고 기록을 삭제하시겠습니까? 관련 공정 데이터에 영향을 줄 수 있습니다.")) {
+            if(confirm("이 입고 기록을 삭제하시겠습니까?")) {
                 await sendData({method:'DELETE', action:'입고', idx:idx});
                 location.reload();
             }
         }
-
+        
         window.onload = init;
     </script>
 </body>
