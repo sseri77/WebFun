@@ -127,7 +127,6 @@
             Object.values(btns).forEach(id => document.getElementById(id).className = "btn-toggle px-6 py-2 text-xs");
             document.getElementById(btns[m]).classList.add(clss[m]);
             
-            // 폼 컬러 포인트 변경
             const submitBtn = document.getElementById('submitBtn');
             if(m === '공정') submitBtn.className = "w-full bg-amber-600 hover:bg-amber-500 py-4 rounded-xl font-black text-white text-base shadow-lg transition-all active:scale-95";
             else if(m === '출고') submitBtn.className = "w-full bg-red-600 hover:bg-red-500 py-4 rounded-xl font-black text-white text-base shadow-lg transition-all active:scale-95";
@@ -166,7 +165,6 @@
             const mCollab = document.getElementById('manualCollab');
 
             if (tVal === 'direct') {
-                // 구단 직접 입력 시 콜라보 드롭박스 숨김 및 입력필드 노출
                 cSel.classList.add('hidden');
                 mTeam.classList.remove('hidden');
                 mCollab.classList.remove('hidden');
@@ -211,8 +209,9 @@
                 else if(item.action === '공정') { totalRaw -= qty; totalAvailable += qty; }
                 else if(item.action === '출고') { totalAvailable -= qty; totalOut += qty; }
 
+                // 배번을 문자열로 확실히 처리하기 위해 템플릿 리터럴 사용
                 const key = `${item.team} ${item.collab} | [${item.num}] ${item.name}`;
-                if(!summary[key]) summary[key] = { raw:0, available:0, team:item.team, collab:item.collab, num:item.num, name:item.name, idx:item.idx };
+                if(!summary[key]) summary[key] = { raw:0, available:0, team:item.team, collab:item.collab, num:String(item.num), name:item.name, idx:item.idx };
                 if(item.action === '입고') summary[key].raw += qty;
                 else if(item.action === '공정') { summary[key].raw -= qty; summary[key].available += qty; }
                 else if(item.action === '출고') summary[key].available -= qty;
@@ -228,6 +227,7 @@
                     const s = summary[key];
                     const tr = document.createElement('tr');
                     tr.className = "row-link";
+                    // fillForm 인자 전달 시 문자열임을 명시하기 위해 따옴표 사용
                     tr.innerHTML = `<td class="p-4" onclick="fillForm('${s.team}','${s.collab}','${s.num}','${s.name}',${s.raw},${s.available})">
                             <span class="text-blue-400 font-bold">${s.team}</span> ${s.collab} <br>
                             <span class="text-gray-400">[${s.num}] ${s.name}</span>
@@ -246,7 +246,7 @@
             document.getElementById('teamSelect').value = t;
             updateCollabOptions();
             document.getElementById('collabSelect').value = c;
-            document.getElementById('pNum').value = n;
+            document.getElementById('pNum').value = String(n); // 문자열로 변환하여 입력
             document.getElementById('pName').value = nm;
             
             const max = curMode === '공정' ? r : a;
@@ -256,6 +256,7 @@
                 document.getElementById('qty').value = max; 
             } else {
                 document.getElementById('maxQty').innerText = "";
+                document.getElementById('qty').value = "";
             }
             window.scrollTo({ top:0, behavior:'smooth' });
         }
@@ -271,7 +272,7 @@
                 action: curMode,
                 team: tSel === 'direct' ? document.getElementById('manualTeam').value : tSel,
                 collab: (tSel === 'direct' || cSel === 'direct') ? document.getElementById('manualCollab').value : cSel,
-                num: document.getElementById('pNum').value,
+                num: String(document.getElementById('pNum').value), // 전송 시에도 문자열화
                 name: document.getElementById('pName').value,
                 qty: document.getElementById('qty').value
             };
