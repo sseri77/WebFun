@@ -6,7 +6,7 @@ app = Flask(__name__)
 
 # [설정] 기획자님이 방금 제공해주신 최신 구글 Apps Script 웹앱 URL입니다.
 # 만약 Apps Script 코드를 수정하셨다면 '새 배포'를 누르고 URL을 다시 확인해 보세요!
-APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhiS8DOFe2-AyJfeNcWLZwfZ6_dtm3rIWDbXYc1Dc6Jbv6BptGrhSSjLl4X8bFbrNlZQ/exec"
+APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxYz4KnDcjaih5dSspSdLqLVeEs_vStD2n-x5M8zxz5PKG8Ldyp7v7rQ1Sj1oZ6TrIE2w/exec"
 
 @app.route('/')
 def home():
