@@ -44,13 +44,17 @@ function getInventorySummary(db) {
 /**
  * 데이터 전송 공통 함수 (INSERT, UPDATE, DELETE)
  */
-async function sendData(payload) {
+aasync function sendData(payload) {
+    // no-cors를 제거해야 GAS에서 데이터를 안정적으로 파싱합니다.
     return fetch(API_URL, {
         method: 'POST',
-        mode: 'no-cors',
+        headers: {
+            'Content-Type': 'text/plain' // JSON 대신 text/plain으로 보내야 CORS 에러를 피하면서 GAS가 잘 읽습니다.
+        },
         body: JSON.stringify(payload)
     });
 }
+
 
 /**
  * 공통 네비게이션 바 생성 (모든 페이지 상단에 자동 삽입 가능)
