@@ -3,49 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Marking-Kit Ops</title>
+    <title>Marking-Kit Pro Ops</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { background-color: #1a1c1e; color: #e2e2e2; font-family: sans-serif; }
         .card { background-color: #2a2d31; border: 1px solid #3f444c; }
         .input-field { background-color: #1a1c1e; border: 1px solid #3f444c; color: white; }
         .hidden { display: none; }
-        .btn-toggle { background-color: #3f444c; color: #a1a1a1; transition: all 0.3s; }
-        .btn-toggle.active-in { background-color: #2563eb; color: white; border: 2px solid #60a5fa; }
-        .btn-toggle.active-out { background-color: #dc2626; color: white; border: 2px solid #f87171; }
+        .btn-toggle { background-color: #3f444c; color: #a1a1a1; transition: all 0.2s; }
+        /* 모드별 색상 정의 */
+        .active-in { background-color: #2563eb !important; color: white !important; border: 2px solid #60a5fa; }
+        .active-process { background-color: #d97706 !important; color: white !important; border: 2px solid #fbbf24; }
+        .active-out { background-color: #dc2626 !important; color: white !important; border: 2px solid #f87171; }
     </style>
 </head>
 <body class="p-4 md:p-8">
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-5xl mx-auto">
         <header class="mb-8 flex justify-between items-end">
             <div>
-                <h1 class="text-2xl font-bold text-blue-400">Smart Marking-Kit Ops</h1>
-                <p class="text-gray-400 text-sm">재고 관리 시스템 v2.0 (입출고 통합)</p>
+                <h1 class="text-2xl font-bold text-blue-400">Marking-Kit Pro Ops</h1>
+                <p class="text-gray-400 text-sm">공정 추적 시스템 v3.0</p>
             </div>
-            <div id="syncStatus" class="text-xs text-green-500 font-mono italic">● SYSTEM LIVE</div>
+            <div id="syncStatus" class="text-xs text-green-500 font-mono italic">● FACTORY LIVE</div>
         </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="card p-6 rounded-xl shadow-lg border-t-4 border-blue-500">
-                <h3 class="text-gray-400 text-xs mb-1 uppercase font-semibold">현재고 총계</h3>
-                <p class="text-3xl font-bold" id="totalStock">0</p>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="card p-4 rounded-xl shadow-lg border-t-4 border-blue-500">
+                <h3 class="text-gray-400 text-[10px] mb-1 font-semibold uppercase">미재단 원단</h3>
+                <p class="text-2xl font-bold" id="totalRaw">0</p>
             </div>
-            <div class="card p-6 rounded-xl shadow-lg border-t-4 border-green-500">
-                <h3 class="text-gray-400 text-xs mb-1 uppercase font-semibold">누적 입고</h3>
-                <p class="text-3xl font-bold text-green-400" id="totalIn">0</p>
+            <div class="card p-4 rounded-xl shadow-lg border-t-4 border-yellow-500">
+                <h3 class="text-gray-400 text-[10px] mb-1 font-semibold uppercase">재단 완료(가용)</h3>
+                <p class="text-2xl font-bold text-yellow-400" id="totalAvailable">0</p>
             </div>
-            <div class="card p-6 rounded-xl shadow-lg border-t-4 border-red-500">
-                <h3 class="text-gray-400 text-xs mb-1 uppercase font-semibold">누적 출고</h3>
-                <p class="text-3xl font-bold text-red-400" id="totalOut">0</p>
+            <div class="card p-4 rounded-xl shadow-lg border-t-4 border-green-500">
+                <h3 class="text-gray-400 text-[10px] mb-1 font-semibold uppercase">누적 출고</h3>
+                <p class="text-2xl font-bold text-green-400" id="totalOut">0</p>
+            </div>
+            <div class="card p-4 rounded-xl shadow-lg border-t-4 border-purple-500">
+                <h3 class="text-gray-400 text-[10px] mb-1 font-semibold uppercase">총 보유 자산</h3>
+                <p class="text-2xl font-bold text-purple-400" id="totalAsset">0</p>
             </div>
         </div>
 
         <section class="card p-6 rounded-xl mb-8 shadow-2xl">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-bold">📥 데이터 입력</h2>
-                <div class="flex gap-2 p-1 bg-[#1a1c1e] rounded-lg">
-                    <button type="button" id="modeIn" onclick="setMode('입고')" class="btn-toggle active-in px-4 py-2 rounded-md text-sm font-bold">입고</button>
-                    <button type="button" id="modeOut" onclick="setMode('출고')" class="btn-toggle px-4 py-2 rounded-md text-sm font-bold">출고</button>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                <h2 class="text-lg font-bold">🛠️ 공정 단계 입력</h2>
+                <div class="flex gap-1 p-1 bg-[#1a1c1e] rounded-lg w-full md:w-auto">
+                    <button type="button" id="modeIn" onclick="setMode('입고')" class="btn-toggle active-in flex-1 px-4 py-2 rounded-md text-xs font-bold">1. 원단입고</button>
+                    <button type="button" id="modeProcess" onclick="setMode('공정')" class="btn-toggle flex-1 px-4 py-2 rounded-md text-xs font-bold">2. 재단완료</button>
+                    <button type="button" id="modeOut" onclick="setMode('출고')" class="btn-toggle flex-1 px-4 py-2 rounded-md text-xs font-bold">3. 최종출고</button>
                 </div>
             </div>
 
@@ -53,7 +60,7 @@
                 <input type="hidden" id="actionType" value="입고">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">구단</label>
+                        <label class="block text-xs text-gray-400 mb-1">구단명</label>
                         <select id="teamNameSelect" onchange="toggleDirectInput(this)" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500">
                             <option value="LG">LG 트윈스</option>
                             <option value="한화">한화 이글스</option>
@@ -61,14 +68,14 @@
                             <option value="롯데">롯데 자이언츠</option>
                             <option value="direct">➕ 직접 입력</option>
                         </select>
-                        <input type="text" id="directTeamInput" class="input-field w-full p-3 mt-2 rounded-lg hidden" placeholder="구단명 입력">
+                        <input type="text" id="directTeamInput" class="input-field w-full p-3 mt-2 rounded-lg hidden" placeholder="구단명 직접 입력">
                     </div>
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">수량</label>
                         <input type="number" id="quantity" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500" placeholder="0">
                     </div>
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">배번 (번호)</label>
+                        <label class="block text-xs text-gray-400 mb-1">배번</label>
                         <input type="number" id="playerNumber" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500" placeholder="00">
                     </div>
                     <div>
@@ -76,25 +83,26 @@
                         <input type="text" id="playerName" class="input-field w-full p-3 rounded-lg outline-none focus:border-blue-500" placeholder="이름 입력">
                     </div>
                 </div>
-                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-all active:scale-95">입고 데이터 전송</button>
+                <button type="submit" id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-lg transition-all active:scale-95">원단 입고 기록하기</button>
             </form>
         </section>
 
         <section>
             <h2 class="text-lg font-bold mb-4 flex justify-between items-center">
-                <span>실시간 현재고 현황</span>
+                <span>📋 구단/선수별 공정 현황</span>
                 <button onclick="fetchInventory()" class="text-xs text-blue-400 hover:underline">🔄 새로고침</button>
             </h2>
             <div class="overflow-x-auto">
                 <table class="w-full text-left card rounded-xl">
-                    <thead>
-                        <tr class="border-b border-gray-700">
-                            <th class="p-4 text-sm font-semibold text-gray-400">구단 / [번호] 선수명</th>
-                            <th class="p-4 text-sm font-semibold text-gray-400 text-right">현재고</th>
+                    <thead class="bg-[#32363c]">
+                        <tr>
+                            <th class="p-4 text-[11px] font-bold text-gray-400 uppercase">구단 / [번호] 선수</th>
+                            <th class="p-4 text-[11px] font-bold text-gray-400 text-right uppercase">미재단</th>
+                            <th class="p-4 text-[11px] font-bold text-gray-400 text-right uppercase">가용재고</th>
                         </tr>
                     </thead>
                     <tbody id="inventoryTable">
-                        <tr><td colspan="2" class="p-4 text-center text-gray-500 text-sm">데이터 로딩 중...</td></tr>
+                        <tr><td colspan="3" class="p-4 text-center text-gray-500 text-sm italic">데이터 동기화 중...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -108,21 +116,22 @@
         function setMode(mode) {
             currentMode = mode;
             document.getElementById('actionType').value = mode;
-            const inBtn = document.getElementById('modeIn');
-            const outBtn = document.getElementById('modeOut');
-            const submitBtn = document.getElementById('submitBtn');
+            const modes = {
+                '입고': { id: 'modeIn', class: 'active-in', btnText: '원단 입고 기록하기', btnClass: 'bg-blue-600 hover:bg-blue-500' },
+                '공정': { id: 'modeProcess', class: 'active-process', btnText: '재단 공정 완료 기록', btnClass: 'bg-yellow-600 hover:bg-yellow-500' },
+                '출고': { id: 'modeOut', class: 'active-out', btnText: '최종 출고 처리', btnClass: 'bg-red-600 hover:bg-red-500' }
+            };
 
-            if(mode === '입고') {
-                inBtn.classList.add('active-in');
-                outBtn.classList.remove('active-out');
-                submitBtn.className = "w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-all active:scale-95";
-                submitBtn.innerText = "입고 데이터 전송";
-            } else {
-                outBtn.classList.add('active-out');
-                inBtn.classList.remove('active-in');
-                submitBtn.className = "w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-lg transition-all active:scale-95";
-                submitBtn.innerText = "출고 데이터 전송";
-            }
+            ['modeIn', 'modeProcess', 'modeOut'].forEach(mId => {
+                const btn = document.getElementById(mId);
+                btn.classList.remove('active-in', 'active-process', 'active-out');
+            });
+
+            const current = modes[mode];
+            document.getElementById(current.id).classList.add(current.class);
+            const sBtn = document.getElementById('submitBtn');
+            sBtn.innerText = current.btnText;
+            sBtn.className = `w-full ${current.btnClass} text-white font-bold py-4 rounded-lg transition-all active:scale-95`;
         }
 
         async function fetchInventory() {
@@ -131,39 +140,44 @@
                 const data = await res.json();
                 
                 const summary = {};
-                let totalIn = 0;
-                let totalOut = 0;
+                let rawTotal = 0; let availableTotal = 0; let outTotal = 0;
 
                 data.forEach(item => {
-                    const amount = parseInt(item.amount) || 0;
+                    const amt = parseInt(item.amount) || 0;
                     const key = `${item.team} | [${item.playerNumber || '0'}] ${item.playerName || '미지정'}`;
                     
-                    if (!summary[key]) summary[key] = 0;
+                    if (!summary[key]) summary[key] = { raw: 0, available: 0 };
 
-                    // 핵심: 구분에 따라 더하거나 빼기
                     if (item.action === '입고') {
-                        summary[key] += amount;
-                        totalIn += amount;
+                        summary[key].raw += amt;
+                        rawTotal += amt;
+                    } else if (item.action === '공정') {
+                        summary[key].raw -= amt; // 원단에서 차감
+                        summary[key].available += amt; // 가용재고로 추가
+                        rawTotal -= amt;
+                        availableTotal += amt;
                     } else if (item.action === '출고') {
-                        summary[key] -= amount;
-                        totalOut += amount;
+                        summary[key].available -= amt; // 가용재고에서 차감
+                        availableTotal -= amt;
+                        outTotal += amt;
                     }
                 });
 
-                document.getElementById('totalIn').innerText = totalIn.toLocaleString();
-                document.getElementById('totalOut').innerText = totalOut.toLocaleString();
-                document.getElementById('totalStock').innerText = (totalIn - totalOut).toLocaleString();
+                document.getElementById('totalRaw').innerText = rawTotal.toLocaleString();
+                document.getElementById('totalAvailable').innerText = availableTotal.toLocaleString();
+                document.getElementById('totalOut').innerText = outTotal.toLocaleString();
+                document.getElementById('totalAsset').innerText = (rawTotal + availableTotal).toLocaleString();
                 
                 const tableBody = document.getElementById('inventoryTable');
                 tableBody.innerHTML = '';
                 
                 Object.keys(summary).sort().forEach(key => {
-                    const stock = summary[key];
-                    const textColor = stock <= 5 ? 'text-red-400' : 'text-blue-300'; // 재고 부족 알림 기능
+                    const row = summary[key];
                     tableBody.innerHTML += `
-                        <tr class="border-b border-gray-800">
-                            <td class="p-4 text-sm">${key}</td>
-                            <td class="p-4 text-sm text-right font-mono ${textColor} font-bold">${stock.toLocaleString()}</td>
+                        <tr class="border-b border-gray-800 hover:bg-gray-800/30">
+                            <td class="p-4 text-sm font-medium">${key}</td>
+                            <td class="p-4 text-sm text-right font-mono text-gray-400">${row.raw.toLocaleString()}</td>
+                            <td class="p-4 text-sm text-right font-mono text-blue-400 font-bold">${row.available.toLocaleString()}</td>
                         </tr>`;
                 });
             } catch (err) { console.error(err); }
@@ -181,10 +195,10 @@
             const finalTeamName = selectVal === 'direct' ? document.getElementById('directTeamInput').value : selectVal;
             const qty = document.getElementById('quantity').value;
 
-            if(!finalTeamName || !qty) return alert('필수 항목을 입력하세요.');
+            if(!finalTeamName || !qty) return alert('필수 데이터를 입력하세요.');
 
             const btn = document.getElementById('submitBtn');
-            btn.disabled = true; btn.innerText = "전송 중...";
+            btn.disabled = true; btn.innerText = "처리 중...";
 
             try {
                 await fetch(API_URL, {
@@ -198,10 +212,10 @@
                         playerName: document.getElementById('playerName').value
                     })
                 });
-                alert(`${currentMode} 완료!`);
+                alert(`${currentMode} 기록 완료!`);
                 document.getElementById('quantity').value = "";
                 fetchInventory();
-            } catch (err) { alert('전송 실패'); }
+            } catch (err) { alert('오류가 발생했습니다.'); }
             finally { btn.disabled = false; setMode(currentMode); }
         });
 
