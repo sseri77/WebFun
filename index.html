@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Marking-Kit Pro Ops v5.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #1a1c1e; color: #e2e2e2; font-family: sans-serif; }
+        .card { background-color: #2a2d31; border: 1px solid #3f444c; }
+        .input-field { background-color: #1a1c1e; border: 1px solid #3f444c; color: white; }
+        .btn-toggle { background-color: #3f444c; color: #a1a1a1; transition: all 0.2s; }
+        .active-in { background-color: #2563eb !important; color: white !important; border: 2px solid #60a5fa; }
+        .active-process { background-color: #d97706 !important; color: white !important; border: 2px solid #fbbf24; }
+        .active-out { background-color: #dc2626 !important; color: white !important; border: 2px solid #f87171; }
+        .btn-edit { color: #60a5fa; margin-right: 8px; }
+        .btn-delete { color: #f87171; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+        <header class="mb-8 flex justify-between items-end">
+            <div>
+                <h1 class="text-2xl font-bold text-blue-400">Marking-Kit Pro Ops</h1>
+                <p class="text-gray-400 text-sm">데이터 관리 시스템 v5.0 (Serverless)</p>
+            </div>
+            <div id="status" class="text-xs text-blue-500 font-mono italic">● SYNCING...</div>
+        </header>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="card p-4 rounded-xl text-center border-t-4 border-blue-500">
+                <h3 class="text-[10px] text-gray-400 uppercase">미재단 원단</h3>
+                <p class="text-2xl font-bold" id="totalRaw">0</p>
+            </div>
+            <div class="card p-4 rounded-xl text-center border-t-4 border-yellow-500">
+                <h3 class="text-[10px] text-gray-400 uppercase">가용재고</h3>
+                <p class="text-2xl font-bold text-yellow-400" id="totalAvailable">0</p>
+            </div>
+            <div class="card p-4 rounded-xl text-center border-t-4 border-green-500">
+                <h3 class="text-[10px] text-gray-400 uppercase">누적 출고</h3>
+                <p class="text-2xl font-bold text-green-400" id="totalOut">0</p>
+            </div>
+            <div class="card p-4 rounded-xl text-center border-t-4 border-purple-500">
+                <h3 class="text-[10px] text-gray-400 uppercase">총 자산</h3>
+                <p class="text-2xl font-bold text-purple-400" id="totalAsset">0</p>
+            </div>
+        </div>
+
+        <section class="card p-6 rounded-xl mb-8 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 id="formTitle" class="text-lg font-bold">🛠️ 작업 기록</h2>
+                <div class="flex gap-1 p-1 bg-[#1a1c1e] rounded-lg">
+                    <button onclick="setMode('입고')" id="modeIn" class="btn-toggle active-in px-4 py-2 rounded-md text-xs font-bold">원단입고</button>
+                    <button onclick="setMode('공정')" id="modeProcess" class="btn-toggle px-4 py-2 rounded-md text-xs font-bold">재단완료</button>
+                    <button onclick="setMode('출고')" id="modeOut" class="btn-toggle px-4 py-2 rounded-md text-xs font-bold">최종출고</button>
+                </div>
+            </div>
+
+            <form id="mainForm" class="space-y-4">
+                <input type="hidden" id="editId" value="">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div id="selectionArea" class="md:col-span-2 hidden">
+                        <label class="block text-[10px] text-blue-400 mb-1 font-bold">기존 목록에서 선택</label>
+                        <select id="itemSelector" onchange="bindSelectedItem(this)" class="input-field w-full p-4 rounded-lg border-2 border-blue-900">
+                            <option value="">-- 선수 선택 --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-gray-400 mb-1">구단 / 콜라보 선택</label>
+                        <select id="teamNameSelect" onchange="toggleDirect(this)" class="input-field w-full p-3 rounded-lg">
+                            <option value="">로딩 중...</option>
+                        </select>
+                        <div id="directInputGroup" class="hidden space-y-2 mt-2">
+                            <input type="text" id="directBaseTeam" class="input-field w-full p-3 rounded-lg" placeholder="구단명">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-gray-400 mb-1">수량 <span id="maxLabel" class="text-red-400 ml-2"></span></label>
+                        <input type="number" id="quantity" class="input-field w-full p-3 rounded-lg" placeholder="0" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-gray-400 mb-1">배번</label>
+                        <input type="text" id="playerNumber" class="input-field w-full p-3 rounded-lg" placeholder="예: 01번">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-gray-400 mb-1">선수 이름</label>
+                        <input type="text" id="playerName" class="input-field w-full p-3 rounded-lg" placeholder="이름 입력">
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button type="submit" id="submitBtn" class="flex-1 bg-blue-600 text-white font-bold py-4 rounded-lg">기록하기</button>
+                    <button type="button" id="cancelEditBtn" onclick="resetForm()" class="hidden w-24 bg-gray-600 text-white font-bold py-4 rounded-lg">취소</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="card rounded-xl overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-[#32363c]">
+                    <tr>
+                        <th class="p-4 text-[10px] text-gray-400">구단 / [배번] 선수</th>
+                        <th class="p-4 text-[10px] text-gray-400 text-right">미재단</th>
+                        <th class="p-4 text-[10px] text-gray-400 text-right">가용</th>
+                        <th class="p-4 text-[10px] text-gray-400 text-center">관리</th>
+                    </tr>
+                </thead>
+                <tbody id="inventoryTable" class="divide-y divide-gray-800"></tbody>
+            </table>
+        </section>
+    </div>
+
+    <script>
+        // [중요] 생성하신 Google Apps Script 배포 URL을 여기에 넣으세요!
+        const API_URL = "https://script.google.com/macros/s/AKfycbxYz4KnDcjaih5dSspSdLqLVeEs_vStD2n-x5M8zxz5PKG8Ldyp7v7rQ1Sj1oZ6TrIE2w/exec"; 
+        
+        let currentMode = "입고";
+        let currentSummary = {};
+        let rawInventoryData = [];
+
+        function setMode(mode) {
+            if(document.getElementById('editId').value !== "") return;
+            currentMode = mode;
+            document.getElementById('selectionArea').classList.toggle('hidden', mode === '입고');
+            const cfg = {
+                '입고': ['active-in', 'bg-blue-600', '원단 입고'],
+                '공정': ['active-process', 'bg-yellow-600', '재단 완료'],
+                '출고': ['active-out', 'bg-red-600', '최종 출고']
+            };
+            ['modeIn', 'modeProcess', 'modeOut'].forEach(id => document.getElementById(id).className = 'btn-toggle px-4 py-2 rounded-md text-xs font-bold');
+            document.getElementById(`mode${mode === '입고' ? 'In' : (mode === '공정' ? 'Process' : 'Out')}`).classList.add(cfg[mode][0]);
+            const btn = document.getElementById('submitBtn');
+            btn.className = `flex-1 ${cfg[mode][1]} text-white font-bold py-4 rounded-lg transition-all`;
+            btn.innerText = cfg[mode][2];
+            if(mode !== '입고') updateSelector();
+        }
+
+        async function fetchAllData() {
+            try {
+                document.getElementById('status').innerText = "● SYNCING...";
+                const res = await fetch(API_URL);
+                const result = await res.json();
+                
+                rawInventoryData = result.inventory || [];
+                const teams = result.teams || [];
+
+                const select = document.getElementById('teamNameSelect');
+                select.innerHTML = '<option value="">-- 선택 --</option>';
+                teams.forEach(t => select.innerHTML += `<option value="${t.name}">${t.name}</option>`);
+                select.innerHTML += '<option value="direct">➕ 직접 입력</option>';
+
+                currentSummary = {};
+                let rT = 0, aT = 0, oT = 0;
+                
+                rawInventoryData.forEach((item) => {
+                    const amt = parseInt(item.amount) || 0;
+                    const key = `${item.team} | [${item.playerNumber}] ${item.playerName}`;
+                    if (!currentSummary[key]) currentSummary[key] = { raw: 0, available: 0, id: item.id };
+                    
+                    if (item.action === '입고') { currentSummary[key].raw += amt; rT += amt; }
+                    else if (item.action === '공정') { currentSummary[key].raw -= amt; currentSummary[key].available += amt; rT -= amt; aT += amt; }
+                    else if (item.action === '출고') { currentSummary[key].available -= amt; aT -= amt; oT += amt; }
+                    currentSummary[key].id = item.id;
+                });
+
+                updateTable();
+                document.getElementById('totalRaw').innerText = rT.toLocaleString();
+                document.getElementById('totalAvailable').innerText = aT.toLocaleString();
+                document.getElementById('totalOut').innerText = oT.toLocaleString();
+                document.getElementById('totalAsset').innerText = (rT + aT).toLocaleString();
+                document.getElementById('status').innerText = "● STABLE";
+            } catch (e) { document.getElementById('status').innerText = "● ERROR"; }
+        }
+
+        function updateTable() {
+            const tableBody = document.getElementById('inventoryTable');
+            tableBody.innerHTML = '';
+            Object.keys(currentSummary).sort().forEach(key => {
+                const row = currentSummary[key];
+                tableBody.innerHTML += `
+                    <tr class="border-b border-gray-800">
+                        <td class="p-4 text-sm">${key}</td>
+                        <td class="p-4 text-sm text-right text-gray-500">${row.raw}</td>
+                        <td class="p-4 text-sm text-right text-blue-400 font-bold">${row.available}</td>
+                        <td class="p-4 text-center">
+                            <button onclick="startEdit('${row.id}')" class="btn-edit text-xs">수정</button>
+                            <button onclick="deleteRecord('${row.id}')" class="btn-delete text-xs">삭제</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        async function deleteRecord(id) {
+            if(!confirm("이 기록을 삭제하시겠습니까?")) return;
+            const payload = { method: 'DELETE', id: id };
+            await sendToGAS(payload);
+        }
+
+        document.getElementById('mainForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const editId = document.getElementById('editId').value;
+            const teamSelect = document.getElementById('teamNameSelect').value;
+            let finalTeam = teamSelect === 'direct' ? document.getElementById('directBaseTeam').value : teamSelect;
+
+            const payload = {
+                method: editId === "" ? 'INSERT' : 'UPDATE',
+                id: editId,
+                action: currentMode,
+                team: finalTeam,
+                amount: parseInt(document.getElementById('quantity').value) || 0,
+                playerNumber: document.getElementById('playerNumber').value,
+                playerName: document.getElementById('playerName').value
+            };
+
+            await sendToGAS(payload);
+        });
+
+        async function sendToGAS(payload) {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true; btn.innerText = "처리 중...";
+            try {
+                // GAS POST는 no-cors 설정이 필요할 수 있습니다.
+                await fetch(API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    body: JSON.stringify(payload)
+                });
+                alert('요청이 전송되었습니다. (잠시 후 자동 새로고침)');
+                location.reload();
+            } catch (err) { alert('오류 발생'); btn.disabled = false; }
+        }
+
+        function startEdit(id) {
+            const data = rawInventoryData.find(item => item.id === id);
+            if(!data) return;
+            document.getElementById('editId').value = id;
+            document.getElementById('formTitle').innerText = "📝 수정 중";
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+            setMode(data.action);
+            document.getElementById('teamNameSelect').value = data.team;
+            document.getElementById('playerNumber').value = data.playerNumber;
+            document.getElementById('playerName').value = data.playerName;
+            document.getElementById('quantity').value = data.amount;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function resetForm() {
+            document.getElementById('mainForm').reset();
+            document.getElementById('editId').value = "";
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+            setMode('입고');
+        }
+
+        function toggleDirect(sel) { document.getElementById('directInputGroup').classList.toggle('hidden', sel.value !== 'direct'); }
+        function updateSelector() {
+            const selector = document.getElementById('itemSelector');
+            selector.innerHTML = '<option value="">-- 선수 선택 --</option>';
+            Object.keys(currentSummary).sort().forEach(key => {
+                const [team, player] = key.split(' | ');
+                const num = player.match(/\[(.*?)\]/)[1];
+                const name = player.split('] ')[1];
+                selector.innerHTML += `<option value="${team}|${num}|${name}">${key}</option>`;
+            });
+        }
+        function bindSelectedItem(sel) {
+            if(!sel.value) return;
+            const [team, num, name] = sel.value.split('|');
+            document.getElementById('teamNameSelect').value = team;
+            document.getElementById('playerNumber').value = num;
+            document.getElementById('playerName').value = name;
+        }
+
+        window.onload = fetchAllData;
+    </script>
+</body>
+</html>
