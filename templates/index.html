@@ -85,7 +85,7 @@
                     </div>
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">배번</label>
-                        <input type="number" id="playerNumber" class="input-field w-full p-3 rounded-lg outline-none" placeholder="00">
+                        <input type="text" id="playerNumber" class="input-field w-full p-3 rounded-lg outline-none" placeholder="예: 01번, A-1 등">
                     </div>
                     <div>
                         <label class="block text-xs text-gray-400 mb-1">선수 이름</label>
@@ -206,10 +206,13 @@
             document.getElementById('maxLabel').innerText = `(현재고: ${currentMode === '공정' ? stock.raw : stock.available}개)`;
         }
 
+// 폼 전송 로직 (배번을 문자열 그대로 전송하도록 유지)
         document.getElementById('mainForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
             const teamSelect = document.getElementById('teamNameSelect').value;
             let baseTeam = "", collabName = "", finalTeam = "";
+            
             if (teamSelect === 'direct') {
                 baseTeam = document.getElementById('directBaseTeam').value;
                 collabName = document.getElementById('directCollab').value;
@@ -220,8 +223,10 @@
                 baseTeam = parts[0];
                 collabName = parts.slice(1).join(' ');
             }
+
             const qty = parseInt(document.getElementById('quantity').value) || 0;
-            const num = document.getElementById('playerNumber').value;
+            // .value를 그대로 가져와서 문자열("01번")을 보존합니다.
+            const num = document.getElementById('playerNumber').value; 
             const name = document.getElementById('playerName').value;
 
             if (currentMode !== '입고') {
@@ -233,15 +238,28 @@
 
             const btn = document.getElementById('submitBtn');
             btn.disabled = true; btn.innerText = "처리 중...";
+            
             try {
                 await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: currentMode, team: finalTeam, baseTeam, collabName, amount: qty, playerNumber: num, playerName: name })
+                    body: JSON.stringify({ 
+                        action: currentMode, 
+                        team: finalTeam, 
+                        baseTeam, 
+                        collabName, 
+                        amount: qty, 
+                        playerNumber: num, // "01번" 형태로 서버에 전송됨
+                        playerName: name 
+                    })
                 });
                 alert('기록 완료!');
                 location.reload();
-            } catch (err) { alert('오류 발생'); btn.disabled = false; }
+            } catch (err) { 
+                alert('오류 발생'); 
+                btn.disabled = false; 
+                btn.innerText = "기록하기";
+            }
         });
 
         function filterTable() {
