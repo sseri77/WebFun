@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>재단 관리 - Process</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #1a1c1e; color: #e2e2e2; }
+        .card { background-color: #2a2d31; border: 1px solid #3f444c; border-radius: 12px; }
+        .input-field { background-color: #1a1c1e; border: 1px solid #4b5563; color: white; border-radius: 8px; padding: 10px; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+        <nav class="mb-6 flex justify-between items-center">
+            <a href="index.html" class="text-gray-400 hover:text-white text-sm">← 대시보드로 돌아가기</a>
+            <h1 class="text-xl font-bold text-yellow-500">✂️ 재단 관리</h1>
+        </nav>
+
+        <section class="card p-6 mb-8 border-l-8 border-yellow-500">
+            <div class="mb-4">
+                <button onclick="openModal()" class="w-full py-2 bg-gray-700 rounded-lg text-xs font-bold text-blue-400 border border-dashed border-blue-500">📦 입고 잔량에서 불러오기</button>
+            </div>
+            <form id="procForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input type="hidden" id="editIdx">
+                <input type="text" id="team" class="input-field" placeholder="구단명" readonly>
+                <input type="text" id="collab" class="input-field" placeholder="콜라보명" readonly>
+                <input type="text" id="pNum" class="input-field" placeholder="배번" readonly>
+                <input type="text" id="pName" class="input-field" placeholder="선수이름" readonly>
+                <input type="number" id="qty" class="input-field font-bold text-yellow-400" placeholder="재단 수량" required>
+                <button type="submit" id="submitBtn" class="md:col-span-3 bg-yellow-600 py-3 rounded-xl font-bold">재단 기록 저장</button>
+            </form>
+        </section>
+
+        </div>
+
+    </body>
+</html>
